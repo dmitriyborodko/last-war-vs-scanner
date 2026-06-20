@@ -29,11 +29,11 @@ The first run creates `.venv`, installs dependencies, and opens a native desktop
 
 ## Use
 
-1. Drag an `.mp4` recording onto the window, or select **Choose Video**.
+1. Drag each `.mp4` onto its **Day 1** through **Day 6** or **Weekly Overall** box. You can also click a box to choose a video.
 2. Optionally select **Alliance Members**, paste a Google Sheets column with one teammate per line, and save it. Reopen the editor later to add, rename, or remove members.
-3. Wait while the local OCR processes the recording.
-4. Select rows and press `Ctrl+C`, or use **Copy Selected** / **Copy All**.
-5. Use **Open Output Folder** to access the full CSV and Excel exports.
+3. Videos process one at a time in drop order. Drop a new video on any completed box to replace and reprocess that slot.
+4. Review each result in its matching table tab. Select rows and press `Ctrl+C`, or use **Copy Selected** / **Copy All**.
+5. Use **Open Output Folder** to access the selected tab's full CSV and Excel exports.
 
 The previous browser-based review interface remains available with `.venv\Scripts\python.exe -m streamlit run app.py`.
 
