@@ -2,6 +2,9 @@ from pathlib import Path
 
 from vsparser.models import MemberResult
 from vsparser.roster import (
+    apply_roster_alias,
+    available_roster_members,
+    edit_result_name,
     load_roster,
     find_most_similar_roster_name,
     match_roster_name,
@@ -9,7 +12,50 @@ from vsparser.roster import (
     reconcile_results,
     remember_names,
     save_member_list,
+    save_roster,
 )
+
+
+def _stored_row(name: str, issues: str = "", points: int = 10) -> dict:
+    return {"name": name, "points": points, "issues": issues, "review": bool(issues)}
+
+
+def test_day_name_edit_claims_absent_member_and_removes_placeholder():
+    rows = [
+        _stored_row("A1ice", "not in alliance member list"),
+        _stored_row("Alice", "not present in VS list; added with zero points", 0),
+        _stored_row("Bob"),
+    ]
+    roster = {"Alice": [], "Bob": []}
+
+    assert edit_result_name(rows, 0, "Alice", roster) == "Alice"
+    assert [(row["name"], row["points"]) for row in rows] == [("Alice", 10), ("Bob", 10)]
+    assert rows[0]["issues"] == ""
+
+
+def test_day_name_edit_stays_local_and_flags_unknown_name():
+    rows = [_stored_row("Alice")]
+    assert edit_result_name(rows, 0, "Outsider", {"Alice": []}) == "Outsider"
+    assert rows[0]["issues"] == "not in alliance member list"
+
+
+def test_day_name_edit_accepts_selected_rows_existing_member():
+    rows = [_stored_row("Alice", "not in alliance member list"), _stored_row("Bob")]
+    assert edit_result_name(rows, 0, "Alice", {"Alice": [], "Bob": []}) == "Alice"
+    assert rows[0]["issues"] == ""
+
+
+def test_alias_assignment_refreshes_matching_week_rows_only():
+    first = [
+        _stored_row("A1ice", "not in alliance member list"),
+        _stored_row("Alice", "not present in VS list; added with zero points", 0),
+    ]
+    second = [_stored_row("Alice")]
+
+    assert available_roster_members(first, {"Alice": [], "Bob": []}) == ["Alice", "Bob"]
+    assert apply_roster_alias(first, "A1ice", "Alice") is True
+    assert apply_roster_alias(second, "A1ice", "Alice") is False
+    assert [(row["name"], row["points"]) for row in first] == [("Alice", 10)]
 
 
 def test_roster_remembers_unicode_name_and_ocr_alias(tmp_path: Path):
@@ -44,6 +90,13 @@ def test_save_member_list_adds_removes_and_preserves_existing_aliases(tmp_path: 
 
     assert save_member_list(path, "Alice\nNew member") == ["Alice", "New member"]
     assert load_roster(path) == {"Alice": ["A1ice"], "New member": []}
+
+
+def test_save_roster_keeps_aliases_and_removes_duplicate_spellings(tmp_path: Path):
+    path = tmp_path / "roster.json"
+
+    assert save_roster(path, {" Alice ": ["A1ice", "a1ice", "Alice", ""], "Bob": ["B0b"]}) == ["Alice", "Bob"]
+    assert load_roster(path) == {"Alice": ["A1ice"], "Bob": ["B0b"]}
 
 
 def _result(name: str, points: int = 100) -> MemberResult:

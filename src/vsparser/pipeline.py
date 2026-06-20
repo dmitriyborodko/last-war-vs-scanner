@@ -11,7 +11,7 @@ from .export import write_exports
 from .layout import detect_list_bounds
 from .merge import merge_observations
 from .models import MemberResult
-from .ocr import RapidOCREngine
+from .ocr import get_ocr_engine
 from .parser import parse_observations
 from .roster import load_roster, reconcile_results
 from .video import inspect_video, select_frames
@@ -36,8 +36,8 @@ def process_video(
 
     frame_dir = output_dir / "frames"
     frame_dir.mkdir(parents=True, exist_ok=True)
-    ocr = RapidOCREngine()
     roster = load_roster(roster_path) if roster_path else {}
+    ocr = get_ocr_engine()
     observations = []
     for number, frame in enumerate(frames, start=1):
         if progress:
@@ -45,7 +45,7 @@ def process_video(
         filename = f"frame_{frame.index:06d}_{frame.timestamp_seconds:08.3f}s.jpg"
         frame_path = frame_dir / filename
         cv2.imwrite(str(frame_path), frame.image)
-        tokens = ocr.read(frame.image)
+        tokens = ocr.read(frame.image, roster)
         bounds = detect_list_bounds(frame.image, tokens)
         frame_observations = parse_observations(
                 tokens, bounds, info.width, info.height,

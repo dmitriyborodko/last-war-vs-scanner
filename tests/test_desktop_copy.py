@@ -1,0 +1,37 @@
+from desktop import ParserWindow, SLOTS
+
+
+class FakeTable:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def get_children(self):
+        return tuple(range(len(self.rows)))
+
+    def item(self, item, field):
+        assert field == "values"
+        return self.rows[item]
+
+
+def test_table_text_copies_only_rank_name_and_points():
+    table = FakeTable([(1, "Alice", 120, "0.950", "low confidence")])
+
+    assert ParserWindow._table_text(table) == "Rank\tName\tPoints\n1\tAlice\t120"
+
+
+def test_week_tables_are_copied_side_by_side_without_diagnostic_columns():
+    tables = {slot: FakeTable([]) for slot in SLOTS}
+    tables["Day 1"] = FakeTable([
+        (1, "Alice", 120, "0.950", "low confidence"),
+        (2, "Bob", 80, "0.900", ""),
+    ])
+    tables["Day 2"] = FakeTable([(1, "Cara", 100, "0.980", "")])
+
+    lines = ParserWindow._week_tables_text(tables).splitlines()
+
+    assert lines[0].split("\t")[:7] == ["Day 1", "", "", "", "Day 2", "", ""]
+    assert lines[1].split("\t")[:7] == ["Rank", "Name", "Points", "", "Rank", "Name", "Points"]
+    assert lines[2].split("\t")[:7] == ["1", "Alice", "120", "", "1", "Cara", "100"]
+    assert lines[3].split("\t")[:7] == ["2", "Bob", "80", "", "", "", ""]
+    assert "Confidence" not in lines[1]
+    assert "Issues" not in lines[1]

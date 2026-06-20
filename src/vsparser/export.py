@@ -44,3 +44,13 @@ def write_exports(results: list[MemberResult], output_dir: Path) -> tuple[Path, 
     xlsx_path.write_bytes(xlsx_bytes(data))
     return csv_path, xlsx_path
 
+
+def write_row_exports(rows: list[dict], output_dir: Path) -> tuple[Path, Path]:
+    """Rewrite exports after the desktop user edits stored result rows."""
+    data = pd.DataFrame(rows, columns=EXPORT_COLUMNS)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = output_dir / "vs_rankings.csv"
+    xlsx_path = output_dir / "vs_rankings.xlsx"
+    csv_path.write_bytes(csv_bytes(data))
+    xlsx_path.write_bytes(xlsx_bytes(data))
+    return csv_path, xlsx_path

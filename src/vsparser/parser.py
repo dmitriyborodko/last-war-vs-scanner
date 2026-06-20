@@ -4,6 +4,7 @@ import re
 import unicodedata
 
 from .models import OCRToken, Observation
+from .multilingual import is_right_to_left
 
 
 POINT_CANDIDATE = re.compile(r"(?<!\w)[\dOoIl|][\dOoIl|,. ]{4,}[\dOoIl|](?!\w)")
@@ -64,7 +65,8 @@ def parse_observations(
         ]
         if not name_candidates:
             continue
-        name_candidates.sort(key=lambda token: token.left)
+        rtl = sum(is_right_to_left(token.text) for token in name_candidates) > len(name_candidates) / 2
+        name_candidates.sort(key=lambda token: token.left, reverse=rtl)
         raw_name = " ".join(token.text for token in name_candidates)
         name = normalize_name(raw_name)
         if not name or name.lower() in {"commander", "points", "ranking"}:

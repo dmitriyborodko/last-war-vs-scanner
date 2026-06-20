@@ -30,6 +30,7 @@ class OCRToken:
     top: float
     right: float
     bottom: float
+    recognition_model: str = "default"
 
     @property
     def center_x(self) -> float:
@@ -76,4 +77,3 @@ class MemberResult:
         data["timestamps"] = "; ".join(f"{value:.3f}" for value in self.timestamps)
         data["source_frames"] = "; ".join(self.source_frames)
         return data
-

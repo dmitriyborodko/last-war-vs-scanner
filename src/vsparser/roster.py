@@ -7,11 +7,11 @@ from difflib import SequenceMatcher
 from pathlib import Path
 
 from .models import MemberResult
+from .multilingual import unicode_skeleton
 
 
 def _skeleton(value: str) -> str:
-    normalized = unicodedata.normalize("NFKC", value).casefold()
-    return "".join(character for character in normalized if character.isalnum())
+    return unicode_skeleton(value)
 
 
 def load_roster(path: Path) -> dict[str, list[str]]:
@@ -40,6 +40,32 @@ def save_member_list(path: Path, value: str) -> list[str]:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(roster, ensure_ascii=False, indent=2), encoding="utf-8")
     return members
+
+
+def save_roster(path: Path, roster: dict[str, list[str]]) -> list[str]:
+    """Save canonical member names and their manually maintained aliases."""
+    cleaned: dict[str, list[str]] = {}
+    seen_names = set()
+    for raw_name, raw_aliases in roster.items():
+        name = str(raw_name).strip()
+        key = _skeleton(name)
+        if not name or not key or key in seen_names:
+            continue
+        seen_names.add(key)
+
+        aliases = []
+        seen_aliases = {key}
+        for raw_alias in raw_aliases:
+            alias = str(raw_alias).strip()
+            alias_key = _skeleton(alias)
+            if alias and alias_key and alias_key not in seen_aliases:
+                aliases.append(alias)
+                seen_aliases.add(alias_key)
+        cleaned[name] = aliases
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(cleaned, ensure_ascii=False, indent=2), encoding="utf-8")
+    return list(cleaned)
 
 
 def match_roster_name(value: str, roster: dict[str, list[str]]) -> tuple[str, float] | None:
@@ -80,6 +106,89 @@ def find_most_similar_roster_name(
         if best is None or score > best[1]:
             best = canonical, score
     return best if best and best[1] >= minimum_score else None
+
+
+def _row_issues(row: dict) -> list[str]:
+    issues = row.get("issues", "")
+    if isinstance(issues, list):
+        return [str(issue).strip() for issue in issues if str(issue).strip()]
+    return [issue.strip() for issue in str(issues).split(";") if issue.strip()]
+
+
+def _is_missing_row(row: dict) -> bool:
+    return "added with zero points" in str(row.get("issues", ""))
+
+
+def _set_member_match(row: dict, canonical: str) -> None:
+    row["name"] = canonical
+    row["issues"] = "; ".join(
+        issue for issue in _row_issues(row)
+        if issue != "not in alliance member list" and "added with zero points" not in issue
+    )
+
+
+def available_roster_members(rows: list[dict], roster: dict[str, list[str]]) -> list[str]:
+    """Return roster members that do not have a real result row for this slot."""
+    canonical_by_key = {_skeleton(name): name for name in roster}
+    present = {
+        canonical_by_key[key]
+        for row in rows
+        if not _is_missing_row(row)
+        for key in [_skeleton(str(row.get("name", "")))]
+        if key in canonical_by_key
+    }
+    return [name for name in roster if name not in present]
+
+
+def edit_result_name(
+    rows: list[dict], row_index: int, new_name: str, roster: dict[str, list[str]]
+) -> str:
+    """Apply a day-only edit, matching it to an absent roster member when possible."""
+    row = rows[row_index]
+    other_rows = [candidate for index, candidate in enumerate(rows) if index != row_index]
+    available = {name: roster[name] for name in available_roster_members(other_rows, roster)}
+    match = match_roster_name(new_name, available)
+    if match is None:
+        match = find_most_similar_roster_name(new_name, available)
+    canonical = match[0] if match else None
+
+    if canonical:
+        _set_member_match(row, canonical)
+        rows[:] = [
+            candidate for index, candidate in enumerate(rows)
+            if index == row_index
+            or not (_is_missing_row(candidate) and _skeleton(str(candidate.get("name", ""))) == _skeleton(canonical))
+        ]
+        return canonical
+
+    row["name"] = new_name
+    issues = [issue for issue in _row_issues(row) if "added with zero points" not in issue]
+    if "not in alliance member list" not in issues:
+        issues.append("not in alliance member list")
+    row["issues"] = "; ".join(issues)
+    return new_name
+
+
+def apply_roster_alias(rows: list[dict], alias: str, canonical: str) -> bool:
+    """Canonicalize an assigned spelling and remove its missing-member placeholder."""
+    alias_key = _skeleton(alias)
+    changed = False
+    matched_real_row = False
+    updated = []
+    for row in rows:
+        if not _is_missing_row(row) and _skeleton(str(row.get("name", ""))) == alias_key:
+            _set_member_match(row, canonical)
+            matched_real_row = True
+            changed = True
+        updated.append(row)
+    if matched_real_row:
+        filtered = [
+            row for row in updated
+            if not (_is_missing_row(row) and _skeleton(str(row.get("name", ""))) == _skeleton(canonical))
+        ]
+        changed = changed or len(filtered) != len(updated)
+        rows[:] = filtered
+    return changed
 
 
 def reconcile_results(results: list[MemberResult], roster: dict[str, list[str]]) -> list[MemberResult]:
