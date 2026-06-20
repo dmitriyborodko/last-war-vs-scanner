@@ -37,9 +37,10 @@ The models are stored under `models/paddleocr`. Later video processing is comple
 
 1. Choose the ISO week in the top-left corner. The current week opens automatically; the selector also includes the previous two years and every saved week.
 2. Drag each `.mp4` onto its **Day 1** through **Day 6** or **Weekly Overall** box, or use the box's **Browse** button. Clicking the box opens its result tab.
-3. Optionally select **Alliance Members** and paste a Google Sheets column to fill the member table. Double-click a name to edit it, or use its **Other Names** and **Delete** buttons, then save the table.
-4. Videos process one at a time in drop order. Drop a new video on any completed box to replace and reprocess that slot.
-5. Review each result in its matching table tab. Double-click a rank, name, or points cell to edit it. Edits are saved immediately. Select rows and press `Ctrl+C`, or use **Copy Selected Table** / **Copy All Week Tables**.
+3. Every daily box is a **Push day** by default; uncheck any day you want to exclude. Click the **Push Days** box to see each member's summed points and recalculated rank.
+4. Optionally select **Alliance Members** and paste a Google Sheets column to fill the member table. Double-click a name to edit it, or use its **Other Names** and **Delete** buttons, then save the table.
+5. Videos process one at a time in drop order. Drop a new video on any completed box to replace and reprocess that slot.
+6. Review each result in its matching table tab. Double-click a rank, name, or points cell to edit it. Edits are saved immediately. Select rows and press `Ctrl+C`, or use **Copy Selected Table** / **Copy All Week Tables**.
 
 Weekly history is stored locally under `data/weeks`; processed files are grouped under `output/weeks`. Opening a saved week restores its reviewed tables without rerunning video processing.
 

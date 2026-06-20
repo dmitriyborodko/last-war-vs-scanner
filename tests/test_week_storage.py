@@ -9,7 +9,13 @@ def test_iso_week_handles_year_boundary():
 
 
 def test_week_state_round_trip(tmp_path: Path):
-    slots = {"Day 1": {"source_name": "day1.mp4", "rows": [{"name": "Alice", "points": 42}]}}
+    slots = {
+        "Day 1": {
+            "source_name": "day1.mp4",
+            "rows": [{"name": "Alice", "points": 42}],
+            "push_day": True,
+        }
+    }
     save_week(tmp_path, "2026-W25", slots)
     assert load_week(tmp_path, "2026-W25") == {"week": "2026-W25", "slots": slots}
     assert load_week(tmp_path, "2026-W24") == {"week": "2026-W24", "slots": {}}

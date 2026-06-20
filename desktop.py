@@ -38,7 +38,10 @@ DISPLAY_COLUMNS = ("rank", "name", "points", "confidence", "issues")
 HEADINGS = ("Rank", "Name", "Points", "Confidence", "Issues")
 COPY_COLUMN_COUNT = 3
 COPY_HEADINGS = HEADINGS[:COPY_COLUMN_COUNT]
-SLOTS = tuple([f"Day {number}" for number in range(1, 7)] + ["Weekly Overall"])
+DAILY_SLOTS = tuple(f"Day {number}" for number in range(1, 7))
+SLOTS = DAILY_SLOTS + ("Weekly Overall",)
+PUSH_SUMMARY = "Push Days"
+VIEW_SLOTS = SLOTS + (PUSH_SUMMARY,)
 BASE_DPI = 96
 
 try:
@@ -51,6 +54,32 @@ def format_points(value: int | None) -> str:
     if value is None:
         return ""
     return locale.format_string("%d", value, grouping=True)
+
+
+def aggregate_push_rows(rows: dict[str, list[dict]], push_days: dict[str, bool]) -> list[dict]:
+    totals: dict[str, dict] = {}
+    for slot in DAILY_SLOTS:
+        if not push_days.get(slot, False):
+            continue
+        for row in rows.get(slot, []):
+            name = str(row.get("name", "")).strip()
+            if not name:
+                continue
+            key = name.casefold()
+            total = totals.setdefault(key, {"name": name, "points": 0})
+            total["points"] += row.get("points") or 0
+
+    ranked = sorted(totals.values(), key=lambda row: (-row["points"], row["name"].casefold()))
+    return [
+        {
+            "rank": index,
+            "name": row["name"],
+            "points": row["points"],
+            "confidence": 0,
+            "issues": "",
+        }
+        for index, row in enumerate(ranked, start=1)
+    ]
 
 
 THEMES = {
@@ -99,8 +128,54 @@ class RoundedButton(tk.Canvas):
         self.itemconfigure(self.label, fill=colors["text"])
 
 
+class PushToggle(tk.Canvas):
+    def __init__(self, parent, variable: tk.BooleanVar, command) -> None:
+        super().__init__(parent, width=92, height=26, highlightthickness=0, cursor="hand2")
+        self.variable = variable
+        self.command = command
+        self.hovered = False
+        self.label = self.create_text(34, 13, text="Push day", font=("Segoe UI", 9))
+        self.badge = self.create_oval(69, 3, 91, 25, width=1)
+        self.tick = self.create_text(
+            80, 14, text="\u2713", font=("Segoe UI Symbol", 11, "bold"), anchor="center",
+        )
+        self.bind("<Button-1>", self._toggle)
+        self.bind("<Enter>", self._enter)
+        self.bind("<Leave>", self._leave)
+        self.apply_theme()
+
+    def _toggle(self, _event=None) -> None:
+        self.variable.set(not self.variable.get())
+        self.apply_theme()
+        self.command()
+
+    def _enter(self, _event=None) -> None:
+        self.hovered = True
+        self.apply_theme()
+
+    def _leave(self, _event=None) -> None:
+        self.hovered = False
+        self.apply_theme()
+
+    def apply_theme(self) -> None:
+        colors = THEMES[bool(self.winfo_toplevel().system_theme.dark)]
+        selected = self.variable.get()
+        self.configure(background=colors["surface"])
+        self.itemconfigure(self.label, fill=colors["text"])
+        self.itemconfigure(
+            self.badge,
+            fill=colors["select"] if selected else colors["border"] if self.hovered else colors["field"],
+            outline=colors["select"] if selected else colors["text"] if self.hovered else colors["control_border"],
+        )
+        self.itemconfigure(
+            self.tick,
+            fill=colors["select_text"],
+            state="normal" if selected else "hidden",
+        )
+
+
 class DropCard(tk.Canvas):
-    def __init__(self, parent, slot: str, on_open, on_browse, on_clear) -> None:
+    def __init__(self, parent, slot: str, on_open, on_browse, on_clear, on_push=None) -> None:
         super().__init__(parent, height=104, highlightthickness=0, cursor="hand2")
         self.slot = slot
         self.filename = ""
@@ -112,6 +187,10 @@ class DropCard(tk.Canvas):
         self.progress = ttk.Progressbar(self, mode="determinate", maximum=100)
         self.browse = RoundedButton(self, text="Browse", width=54, command=on_browse)
         self.clear = RoundedButton(self, text="X", width=26, command=on_clear)
+        self.push_var = tk.BooleanVar(value=False)
+        self.push = PushToggle(
+            self, variable=self.push_var, command=on_push,
+        ) if on_push is not None else None
         self._windows = [
             self.create_window(0, 0, window=self.title),
             self.create_window(0, 0, window=self.message),
@@ -119,6 +198,8 @@ class DropCard(tk.Canvas):
             self.create_window(0, 0, window=self.browse),
             self.create_window(0, 0, window=self.clear),
         ]
+        if self.push is not None:
+            self._windows.append(self.create_window(0, 0, window=self.push, anchor="se"))
         self.bind("<Configure>", self._layout)
         for widget in (self, self.title, self.message):
             widget.bind("<Button-1>", lambda _event: self._on_open())
@@ -141,10 +222,17 @@ class DropCard(tk.Canvas):
         self.tag_lower(self._shape)
         self.coords(self._windows[0], width / 2, 31)
         self.coords(self._windows[1], width / 2, 57)
-        self.coords(self._windows[2], width / 2, 81)
-        self.itemconfigure(self._windows[2], width=max(70, width - 28))
+        if self.push is not None:
+            progress_width = max(70, width - 130)
+            self.coords(self._windows[2], 14 + progress_width / 2, 81)
+            self.itemconfigure(self._windows[2], width=progress_width)
+        else:
+            self.coords(self._windows[2], width / 2, 81)
+            self.itemconfigure(self._windows[2], width=max(70, width - 28))
         self.coords(self._windows[3], width - 66, 17)
         self.coords(self._windows[4], width - 17, 17)
+        if self.push is not None:
+            self.coords(self._windows[5], width - 10, height - 8)
         self.apply_theme()
 
     def apply_theme(self) -> None:
@@ -171,6 +259,11 @@ class DropCard(tk.Canvas):
         if progress is not None:
             self.progress["value"] = progress
 
+    def set_push_day(self, selected: bool) -> None:
+        self.push_var.set(selected)
+        if self.push is not None:
+            self.push.apply_theme()
+
     def _show_tooltip(self, _event=None) -> None:
         if not self.filename or self._tooltip is not None:
             return
@@ -185,6 +278,38 @@ class DropCard(tk.Canvas):
             self._tooltip.destroy()
             self._tooltip = None
 
+
+class ActionCard(tk.Canvas):
+    def __init__(self, parent, title: str, message: str, on_open) -> None:
+        super().__init__(parent, height=104, highlightthickness=0, cursor="hand2")
+        self._shape: int | None = None
+        self.title = ttk.Label(self, text=title, font=("Segoe UI", 10, "bold"), anchor="center")
+        self.message = ttk.Label(self, text=message, style="Muted.TLabel", anchor="center")
+        self._windows = [
+            self.create_window(0, 0, window=self.title),
+            self.create_window(0, 0, window=self.message),
+        ]
+        self.bind("<Configure>", self._layout)
+        for widget in (self, self.title, self.message):
+            widget.bind("<Button-1>", lambda _event: on_open())
+
+    def _layout(self, _event=None) -> None:
+        width, height = self.winfo_width(), self.winfo_height()
+        if self._shape is not None:
+            self.delete(self._shape)
+        self._shape = DropCard._rounded_rectangle(self, width, height)
+        self.tag_lower(self._shape)
+        self.coords(self._windows[0], width / 2, 39)
+        self.coords(self._windows[1], width / 2, 65)
+        self.apply_theme()
+
+    def apply_theme(self) -> None:
+        colors = THEMES[bool(self.winfo_toplevel().system_theme.dark)]
+        self.configure(background=colors["background"])
+        if self._shape is not None:
+            self.itemconfigure(self._shape, fill=colors["surface"], outline=colors["border"])
+        self.title.configure(background=colors["surface"])
+        self.message.configure(background=colors["surface"])
 
 def system_uses_dark_theme() -> bool:
     if sys.platform != "win32" or winreg is None:
@@ -314,9 +439,9 @@ class SystemTheme:
         if isinstance(widget, (tk.Tk, tk.Toplevel)):
             widget.configure(background=colors["background"])
             set_window_dark_mode(widget, bool(self.dark))
-        elif isinstance(widget, RoundedButton):
+        elif isinstance(widget, (RoundedButton, PushToggle)):
             widget.apply_theme()
-        elif isinstance(widget, DropCard):
+        elif isinstance(widget, (DropCard, ActionCard)):
             widget.apply_theme()
         elif isinstance(widget, tk.Canvas):
             widget.configure(background=colors["background"])
@@ -758,6 +883,7 @@ class ParserWindow:
         self.history_dir = ROOT / "data" / "weeks"
         self.selected_week = iso_week()
         self.source_names: dict[str, str] = {slot: "" for slot in SLOTS}
+        self.push_days: dict[str, bool] = {slot: True for slot in DAILY_SLOTS}
 
         self._build_ui()
         self.root.system_theme.theme_window(self.root)
@@ -798,6 +924,8 @@ class ParserWindow:
                 on_open=lambda selected=slot: self._select_slot(selected),
                 on_browse=lambda selected=slot: self._choose_video(selected),
                 on_clear=lambda selected=slot: self._clear_slot(selected),
+                on_push=(lambda selected=slot: self._toggle_push_day(selected))
+                if slot in DAILY_SLOTS else None,
             )
             row, column = divmod(index, 4)
             drop_area.grid(row=row, column=column, sticky="nsew", padx=4, pady=4)
@@ -805,6 +933,17 @@ class ParserWindow:
                 target.drop_target_register(DND_FILES)
                 target.dnd_bind("<<Drop>>", lambda event, selected=slot: self._on_drop(event, selected))
             self.drop_areas[slot] = drop_area
+        self.push_summary_card = ActionCard(
+            drops,
+            PUSH_SUMMARY,
+            "Open combined push ranking",
+            on_open=lambda: self._select_slot(PUSH_SUMMARY),
+        )
+        summary_index = len(SLOTS)
+        summary_row, summary_column = divmod(summary_index, 4)
+        self.push_summary_card.grid(
+            row=summary_row, column=summary_column, sticky="nsew", padx=4, pady=4,
+        )
         for column in range(4):
             drops.columnconfigure(column, weight=1)
 
@@ -813,10 +952,10 @@ class ParserWindow:
 
         self.notebook = ttk.Notebook(frame, style="Tabless.TNotebook")
         self.notebook.pack(fill="both", expand=True)
-        for slot in SLOTS:
+        for slot in VIEW_SLOTS:
             table_frame = ttk.Frame(self.notebook)
             self.notebook.add(table_frame, text=slot)
-            self.tables[slot] = self._build_table(table_frame)
+            self.tables[slot] = self._build_table(table_frame, editable=slot != PUSH_SUMMARY)
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x", pady=(12, 0))
         ttk.Button(buttons, text="Alliance Members", command=self._edit_members).pack(side="left")
@@ -827,7 +966,7 @@ class ParserWindow:
             side="left", padx=(8, 0)
         )
 
-    def _build_table(self, table_frame: ttk.Frame) -> ttk.Treeview:
+    def _build_table(self, table_frame: ttk.Frame, editable: bool = True) -> ttk.Treeview:
         table = ttk.Treeview(table_frame, columns=DISPLAY_COLUMNS, show="headings", selectmode="extended")
         widths = (60, 120, 80, 100, 100)
         for column, heading, width in zip(DISPLAY_COLUMNS, HEADINGS, widths, strict=True):
@@ -848,8 +987,9 @@ class ParserWindow:
         table_frame.rowconfigure(0, weight=1)
         table_frame.columnconfigure(0, weight=1)
         table.bind("<Control-c>", lambda _event: self._copy_selected())
-        table.bind("<Button-1>", self._show_name_menu)
-        table.bind("<Double-Button-1>", self._edit_table_cell)
+        if editable:
+            table.bind("<Button-1>", self._show_name_menu)
+            table.bind("<Double-Button-1>", self._edit_table_cell)
         return table
 
     def _change_week(self, _event=None) -> None:
@@ -868,6 +1008,9 @@ class ParserWindow:
             messagebox.showerror("Could not open week", str(error))
             state = {"slots": {}}
         stored_slots = state.get("slots", {})
+        for slot in DAILY_SLOTS:
+            self.push_days[slot] = bool(stored_slots.get(slot, {}).get("push_day", True))
+            self.drop_areas[slot].set_push_day(self.push_days[slot])
         for slot in SLOTS:
             saved = stored_slots.get(slot, {})
             self.rows[slot] = saved.get("rows", [])
@@ -875,6 +1018,7 @@ class ParserWindow:
             output_value = saved.get("output_dir")
             self.output_dirs[slot] = ROOT / output_value if output_value else None
             self._render_slot(slot)
+        self._render_push_summary()
         self.status.configure(text=f"{self.selected_week} loaded.")
 
     def _render_slot(self, slot: str) -> None:
@@ -900,11 +1044,34 @@ class ParserWindow:
             self.drop_areas[slot].show_state("Ready - hover for file", filename)
         else:
             self.drop_areas[slot].show_state("Drop MP4 here", clear=False)
+        if slot in DAILY_SLOTS:
+            self._render_push_summary()
+
+    def _render_push_summary(self) -> None:
+        table = self.tables[PUSH_SUMMARY]
+        for item in table.get_children():
+            table.delete(item)
+        rows = aggregate_push_rows(self.rows, self.push_days)
+        for index, row in enumerate(rows):
+            table.insert(
+                "", "end", iid=str(index),
+                values=(row["rank"], row["name"], format_points(row["points"]), "", ""),
+            )
+        if rows:
+            self._fit_result_columns(table)
+
+    def _toggle_push_day(self, slot: str) -> None:
+        self.push_days[slot] = self.drop_areas[slot].push_var.get()
+        self._render_push_summary()
+        self._save_selected_week()
+        selected = sum(self.push_days.values())
+        self.status.configure(text=f"{selected} push day(s) selected for {self.selected_week}.")
 
     def _save_selected_week(self) -> None:
         slots = {}
         for slot in SLOTS:
-            if not self.rows[slot]:
+            is_push_day = self.push_days.get(slot, False)
+            if slot not in DAILY_SLOTS and not self.rows[slot]:
                 continue
             output_dir = self.output_dirs[slot]
             try:
@@ -916,6 +1083,8 @@ class ParserWindow:
                 "output_dir": output_value,
                 "rows": self.rows[slot],
             }
+            if slot in DAILY_SLOTS:
+                slots[slot]["push_day"] = is_push_day
         save_week(self.history_dir, self.selected_week, slots)
         weeks = selectable_weeks(self.history_dir)
         self.week_selector.configure(values=weeks)
@@ -1056,7 +1225,7 @@ class ParserWindow:
             self._enqueue(slot, Path(path))
 
     def _select_slot(self, slot: str) -> None:
-        self.notebook.select(SLOTS.index(slot))
+        self.notebook.select(VIEW_SLOTS.index(slot))
 
     def _clear_slot(self, slot: str) -> None:
         if any(job[0] == slot for job in self.pending):
@@ -1211,7 +1380,7 @@ class ParserWindow:
         self._start_next()
 
     def _active_slot(self) -> str:
-        return SLOTS[self.notebook.index(self.notebook.select())]
+        return VIEW_SLOTS[self.notebook.index(self.notebook.select())]
 
     def _active_table(self) -> ttk.Treeview:
         return self.tables[self._active_slot()]

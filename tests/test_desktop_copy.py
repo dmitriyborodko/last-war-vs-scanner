@@ -1,5 +1,5 @@
 import desktop
-from desktop import ParserWindow, SLOTS, format_points
+from desktop import ParserWindow, SLOTS, aggregate_push_rows, format_points
 
 
 class FakeTable:
@@ -50,3 +50,21 @@ def test_week_tables_are_copied_side_by_side_without_diagnostic_columns():
     assert lines[3].split("\t")[:7] == ["2", "Bob", "80", "", "", "", ""]
     assert "Confidence" not in lines[1]
     assert "Issues" not in lines[1]
+
+
+def test_push_rows_sum_only_selected_days_and_recalculate_ranks():
+    rows = {
+        "Day 1": [
+            {"name": "Alice", "points": 100},
+            {"name": "Bob", "points": 80},
+        ],
+        "Day 2": [{"name": "alice", "points": 50}],
+        "Day 3": [{"name": "Bob", "points": 1_000}],
+    }
+
+    result = aggregate_push_rows(rows, {"Day 1": True, "Day 2": True, "Day 3": False})
+
+    assert [(row["rank"], row["name"], row["points"]) for row in result] == [
+        (1, "Alice", 150),
+        (2, "Bob", 80),
+    ]
