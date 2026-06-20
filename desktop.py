@@ -436,11 +436,22 @@ class MemberEditor:
         toolbar = ttk.Frame(frame)
         toolbar.pack(fill="x", pady=(0, 8))
         ttk.Button(toolbar, text="Add Multiple Entries", command=self._add_multiple_entries).pack(side="left")
+        self.remove_all_button = ttk.Button(toolbar, text="Remove All", command=self._remove_all)
+        self.remove_all_button.pack(side="right")
+
+        search_row = ttk.Frame(frame)
+        search_row.pack(fill="x", pady=(0, 8))
+        ttk.Label(search_row, text="Search").pack(side="left", padx=(0, 8))
+        self.search_query = tk.StringVar()
+        search_entry = ttk.Entry(search_row, textvariable=self.search_query)
+        search_entry.pack(side="left", fill="x", expand=True)
+        self.search_query.trace_add("write", lambda *_args: self._render_rows())
 
         table_frame = ttk.Frame(frame, relief="solid", borderwidth=1)
         table_frame.pack(fill="both", expand=True)
         header = ttk.Frame(table_frame, padding=(8, 6))
         header.pack(fill="x")
+        ttk.Label(header, text="#", width=4, font=("Segoe UI", 9, "bold")).pack(side="left")
         self.name_header = ttk.Label(header, text="Name", font=("Segoe UI", 9, "bold"), cursor="hand2")
         self.name_header.pack(side="left")
         self.name_header.bind("<Button-1>", lambda _event: self._sort_members())
@@ -469,6 +480,7 @@ class MemberEditor:
     def _render_rows(self) -> None:
         for child in self.rows.winfo_children():
             child.destroy()
+        self.remove_all_button.configure(state="normal" if self.members else "disabled")
         add_row = ttk.Frame(self.rows, padding=(8, 4))
         add_row.pack(fill="x")
         add_button = ttk.Button(add_row, text="+", width=3, command=self._begin_add_member)
@@ -483,14 +495,26 @@ class MemberEditor:
                 style="Muted.TLabel", padding=12,
             ).pack()
             return
-        members = self.members.items()
+        members = list(self.members.items())
         if self.name_sort_descending is not None:
             members = sorted(
                 members, key=lambda item: item[0].casefold(), reverse=self.name_sort_descending,
             )
-        for name, aliases in members:
+        query = self.search_query.get().strip().casefold()
+        if query:
+            members = [
+                (name, aliases) for name, aliases in members
+                if query in name.casefold() or any(query in alias.casefold() for alias in aliases)
+            ]
+        if not members:
+            ttk.Label(
+                self.rows, text="No members match your search.", style="Muted.TLabel", padding=12,
+            ).pack()
+            return
+        for number, (name, aliases) in enumerate(members, start=1):
             row = ttk.Frame(self.rows, padding=(8, 4))
             row.pack(fill="x")
+            ttk.Label(row, text=str(number), width=4).pack(side="left")
             label = ttk.Label(row, text=name, cursor="xterm")
             label.pack(side="left", fill="x", expand=True)
             label.bind("<Double-Button-1>", lambda _event, current=name, widget=label: self._edit_name(current, widget))
@@ -622,6 +646,18 @@ class MemberEditor:
 
     def _delete(self, name: str) -> None:
         del self.members[name]
+        self._render_rows()
+
+    def _remove_all(self) -> None:
+        if not self.members:
+            return
+        if not messagebox.askokcancel(
+            "Remove all members",
+            "Remove all alliance members? This cannot be undone after saving.",
+            parent=self.dialog,
+        ):
+            return
+        self.members.clear()
         self._render_rows()
 
     def _edit_aliases(self, name: str) -> None:
