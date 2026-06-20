@@ -1,4 +1,5 @@
-from desktop import ParserWindow, SLOTS
+import desktop
+from desktop import ParserWindow, SLOTS, format_points
 
 
 class FakeTable:
@@ -11,6 +12,20 @@ class FakeTable:
     def item(self, item, field):
         assert field == "values"
         return self.rows[item]
+
+
+def test_points_use_the_locale_thousands_separator(monkeypatch):
+    calls = []
+
+    def fake_format_string(pattern, value, grouping=False):
+        calls.append((pattern, value, grouping))
+        return "42.089.581"
+
+    monkeypatch.setattr(desktop.locale, "format_string", fake_format_string)
+
+    assert format_points(42_089_581) == "42.089.581"
+    assert calls == [("%d", 42_089_581, True)]
+    assert format_points(None) == ""
 
 
 def test_table_text_copies_only_rank_name_and_points():

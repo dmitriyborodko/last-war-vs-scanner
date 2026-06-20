@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ctypes
+import locale
 import queue
 import sys
 import threading
@@ -39,6 +40,19 @@ COPY_COLUMN_COUNT = 3
 COPY_HEADINGS = HEADINGS[:COPY_COLUMN_COUNT]
 SLOTS = tuple([f"Day {number}" for number in range(1, 7)] + ["Weekly Overall"])
 BASE_DPI = 96
+
+try:
+    locale.setlocale(locale.LC_NUMERIC, "")
+except locale.Error:
+    pass
+
+
+def format_points(value: int | None) -> str:
+    if value is None:
+        return ""
+    return locale.format_string("%d", value, grouping=True)
+
+
 THEMES = {
     False: {
         "background": "#f3f3f3", "surface": "#ffffff", "field": "#ffffff",
@@ -186,6 +200,19 @@ def system_uses_dark_theme() -> bool:
         return False
 
 
+def windows_system_color(index: int, fallback: str) -> str:
+    if sys.platform != "win32":
+        return fallback
+    try:
+        color = ctypes.windll.user32.GetSysColor(index)
+    except (AttributeError, OSError):
+        return fallback
+    red = color & 0xFF
+    green = (color >> 8) & 0xFF
+    blue = (color >> 16) & 0xFF
+    return f"#{red:02x}{green:02x}{blue:02x}"
+
+
 def set_window_dark_mode(window: tk.Misc, dark: bool) -> None:
     if sys.platform != "win32":
         return
@@ -215,10 +242,14 @@ class SystemTheme:
 
     def _apply_if_changed(self) -> None:
         dark = system_uses_dark_theme()
-        if dark == self.dark:
-            return
-        self.dark = dark
         colors = THEMES[dark]
+        row_highlight = windows_system_color(13, colors["select"])
+        row_highlight_text = windows_system_color(14, colors["select_text"])
+        theme_state = (dark, row_highlight, row_highlight_text)
+        if theme_state == getattr(self, "_theme_state", None):
+            return
+        self._theme_state = theme_state
+        self.dark = dark
         style = ttk.Style(self.root)
         style.theme_use("clam")
         style.configure(".", background=colors["background"], foreground=colors["text"])
@@ -251,8 +282,8 @@ class SystemTheme:
             foreground=colors["text"], bordercolor=colors["border"],
         )
         style.map(
-            "Treeview", background=[("selected", colors["select"])],
-            foreground=[("selected", colors["select_text"])],
+            "Treeview", background=[("selected", row_highlight)],
+            foreground=[("selected", row_highlight_text)],
         )
         style.configure("Treeview.Heading", background=colors["surface"], foreground=colors["text"])
         style.map(
@@ -818,7 +849,7 @@ class ParserWindow:
             values = (
                 row.get("rank") if row.get("rank") is not None else "",
                 row.get("name", ""),
-                row.get("points") if row.get("points") is not None else "",
+                format_points(row.get("points")),
                 f'{float(row.get("confidence", 0)):.3f}',
                 row.get("issues", ""),
             )
