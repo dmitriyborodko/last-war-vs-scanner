@@ -1,6 +1,6 @@
 [project]
 name = "last-war-vs-scanner"
-version = "0.1.0"
+version = "1.1.0"
 description = "Local extraction and review of alliance-member VS rankings from iOS recordings"
 requires-python = ">=3.11"
 
