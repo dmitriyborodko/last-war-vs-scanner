@@ -50,6 +50,22 @@ def test_locale_falls_back_from_region_to_language(tmp_path, monkeypatch):
     localization.load_catalog.cache_clear()
 
 
+@pytest.mark.parametrize("language", ["pt", "pt_PT", "pt-AO"])
+def test_portuguese_locales_fall_back_to_brazilian_portuguese(
+    language, tmp_path, monkeypatch
+):
+    (tmp_path / "pt_BR.json").write_text(
+        json.dumps({"Ready": {"translation": "Pronto", "description": "Idle status."}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(localization, "LOCALES_DIR", tmp_path)
+    localization.load_catalog.cache_clear()
+
+    assert localization.load_catalog(language)["Ready"]["translation"] == "Pronto"
+
+    localization.load_catalog.cache_clear()
+
+
 def test_translation_formats_named_values(monkeypatch):
     monkeypatch.setattr(
         localization,

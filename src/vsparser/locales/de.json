@@ -4,111 +4,111 @@
     "description": "Application window and browser page title."
   },
   "Local-only processing. Recordings and extracted data remain on this PC.": {
-    "translation": "Local-only processing. Recordings and extracted data remain on this PC.",
+    "translation": "Nur lokale Verarbeitung. Aufnahmen und extrahierte Daten bleiben auf diesem PC.",
     "description": "Privacy note below the Streamlit app heading."
   },
   "MP4 path": {
-    "translation": "MP4 path",
+    "translation": "MP4-Pfad",
     "description": "Label for the input recording file path."
   },
   "Output folder": {
-    "translation": "Output folder",
+    "translation": "Ausgabeordner",
     "description": "Label for the folder where extracted files are saved."
   },
   "Local teammate roster": {
-    "translation": "Local teammate roster",
+    "translation": "Lokale Teammitgliederliste",
     "description": "Label for the local alliance roster file path."
   },
   "Alliance Members": {
-    "translation": "Alliance Members",
+    "translation": "Allianzmitglieder",
     "description": "Button and dialog title for managing alliance members."
   },
   "Alliance members": {
-    "translation": "Alliance members",
+    "translation": "Allianzmitglieder",
     "description": "Heading in the alliance member editor."
   },
   "Could not open members": {
-    "translation": "Could not open members",
+    "translation": "Mitglieder konnten nicht geöffnet werden",
     "description": "Error dialog title shown when the roster cannot be read."
   },
   "Could not open members: {error}": {
-    "translation": "Could not open members: {error}",
+    "translation": "Mitglieder konnten nicht geöffnet werden: {error}",
     "description": "Inline roster loading error. {error} is the system error message."
   },
   "One alliance member per line": {
-    "translation": "One alliance member per line",
+    "translation": "Ein Allianzmitglied pro Zeile",
     "description": "Label for the multiline roster editor."
   },
   "Paste a column from Google Sheets. Edit the lines to add, rename, or remove members.": {
-    "translation": "Paste a column from Google Sheets. Edit the lines to add, rename, or remove members.",
+    "translation": "Füge eine Spalte aus Google Sheets ein. Bearbeite die Zeilen, um Mitglieder hinzuzufügen, umzubenennen oder zu entfernen.",
     "description": "Help text explaining the Streamlit roster editor."
   },
   "Save Members": {
-    "translation": "Save Members",
+    "translation": "Mitglieder speichern",
     "description": "Button that saves changes to the alliance roster."
   },
   "Saved {count} alliance member(s).": {
-    "translation": "Saved {count} alliance member(s).",
+    "translation": "{count} Allianzmitglied(er) gespeichert.",
     "description": "Success message after saving the roster. {count} is the number saved."
   },
   "Could not save members": {
-    "translation": "Could not save members",
+    "translation": "Mitglieder konnten nicht gespeichert werden",
     "description": "Error dialog title shown when roster saving fails."
   },
   "Could not save members: {error}": {
-    "translation": "Could not save members: {error}",
+    "translation": "Mitglieder konnten nicht gespeichert werden: {error}",
     "description": "Inline roster saving error. {error} is the system error message."
   },
   "Process recording": {
-    "translation": "Process recording",
+    "translation": "Aufnahme verarbeiten",
     "description": "Primary button that begins video analysis."
   },
   "Opening video": {
-    "translation": "Opening video",
+    "translation": "Video wird geöffnet",
     "description": "Initial progress message while opening a recording."
   },
   "Selecting frames and running offline OCR...": {
-    "translation": "Selecting frames and running offline OCR...",
+    "translation": "Frames werden ausgewählt und Offline-OCR wird ausgeführt...",
     "description": "Busy message while video frames are selected and read locally."
   },
   "Complete": {
-    "translation": "Complete",
+    "translation": "Abgeschlossen",
     "description": "Progress message indicating processing finished."
   },
   "Review": {
-    "translation": "Review",
+    "translation": "Überprüfung",
     "description": "Heading above extracted ranking results."
   },
   "Keep": {
-    "translation": "Keep",
+    "translation": "Behalten",
     "description": "Checkbox column controlling whether a result row is included in exports."
   },
   "Review required": {
-    "translation": "Review required",
+    "translation": "Überprüfung erforderlich",
     "description": "Checkbox column indicating that an extracted result needs manual review."
   },
   "Correct cells directly. Clear **Keep** to remove a row from exports.": {
-    "translation": "Correct cells directly. Clear **Keep** to remove a row from exports.",
+    "translation": "Korrigiere Zellen direkt. Entferne **Behalten**, um eine Zeile aus Exporten zu entfernen.",
     "description": "Instructions for editing extracted results in Streamlit; Keep is a column name."
   },
   "Remember reviewed teammate names": {
-    "translation": "Remember reviewed teammate names",
+    "translation": "Überprüfte Teammitgliedernamen merken",
     "description": "Button that stores corrected names and OCR aliases."
   },
   "Saved names and OCR aliases locally to {path}": {
-    "translation": "Saved names and OCR aliases locally to {path}",
+    "translation": "Namen und OCR-Aliase lokal unter {path} gespeichert",
     "description": "Confirmation after saving reviewed names. {path} is the roster file path."
   },
   "Export reviewed CSV": {
-    "translation": "Export reviewed CSV",
+    "translation": "Überprüfte CSV exportieren",
     "description": "Download button for reviewed results in CSV format."
   },
   "Export reviewed Excel": {
-    "translation": "Export reviewed Excel",
+    "translation": "Überprüfte Excel-Datei exportieren",
     "description": "Download button for reviewed results in Excel format."
   },
   "Source verification": {
-    "translation": "Source verification",
+    "translation": "Quellenüberprüfung",
     "description": "Heading for checking extracted data against source frames."
   },
   "Frame": {
@@ -116,19 +116,19 @@
     "description": "Label for selecting a source video frame."
   },
   "Day {number}": {
-    "translation": "Day {number}",
+    "translation": "Tag {number}",
     "description": "Display name for a daily ranking slot. {number} is from 1 to 6."
   },
   "Weekly Overall": {
-    "translation": "Weekly Overall",
+    "translation": "Wöchentliche Gesamtwertung",
     "description": "Display name for the overall weekly ranking slot."
   },
   "Push Days": {
-    "translation": "Push Days",
+    "translation": "Push-Tage",
     "description": "Display name for the combined ranking of selected push days."
   },
   "Rank": {
-    "translation": "Rank",
+    "translation": "Rang",
     "description": "Ranking position column heading."
   },
   "Name": {
@@ -136,99 +136,99 @@
     "description": "Alliance member name column heading or field label."
   },
   "Points": {
-    "translation": "Points",
+    "translation": "Punkte",
     "description": "Score column heading or field label."
   },
   "Confidence": {
-    "translation": "Confidence",
+    "translation": "Konfidenz",
     "description": "OCR confidence column heading."
   },
   "Issues": {
-    "translation": "Issues",
+    "translation": "Probleme",
     "description": "Column heading for extraction warnings."
   },
   "Push day": {
-    "translation": "Push day",
+    "translation": "Push-Tag",
     "description": "Toggle marking a daily ranking as part of the push total."
   },
   "Drop MP4 here": {
-    "translation": "Drop MP4 here",
+    "translation": "MP4 hier ablegen",
     "description": "Prompt on an empty recording drop area."
   },
   "Browse": {
-    "translation": "Browse",
+    "translation": "Durchsuchen",
     "description": "Button that opens a recording file picker."
   },
   "Add members individually or in a batch. Double-click a name to edit it in place.": {
-    "translation": "Add members individually or in a batch. Double-click a name to edit it in place.",
+    "translation": "Füge Mitglieder einzeln oder stapelweise hinzu. Doppelklicke auf einen Namen, um ihn direkt zu bearbeiten.",
     "description": "Instructions at the top of the member editor."
   },
   "Add Multiple Entries": {
-    "translation": "Add Multiple Entries",
+    "translation": "Mehrere Einträge hinzufügen",
     "description": "Button and dialog title for pasting several member names."
   },
   "Remove All": {
-    "translation": "Remove All",
+    "translation": "Alle entfernen",
     "description": "Button that removes every alliance member."
   },
   "Search": {
-    "translation": "Search",
+    "translation": "Suchen",
     "description": "Label for filtering the alliance member list."
   },
   "Actions": {
-    "translation": "Actions",
+    "translation": "Aktionen",
     "description": "Column heading for member management buttons."
   },
   "Cancel": {
-    "translation": "Cancel",
+    "translation": "Abbrechen",
     "description": "Button that closes a dialog without applying changes."
   },
   "Add member": {
-    "translation": "Add member",
+    "translation": "Mitglied hinzufügen",
     "description": "Action for adding one alliance member."
   },
   "No members yet. Add one or add multiple entries to begin.": {
-    "translation": "No members yet. Add one or add multiple entries to begin.",
+    "translation": "Noch keine Mitglieder. Füge ein Mitglied oder mehrere Einträge hinzu, um zu beginnen.",
     "description": "Empty-state message in the member editor."
   },
   "No members match your search.": {
-    "translation": "No members match your search.",
+    "translation": "Keine Mitglieder entsprechen deiner Suche.",
     "description": "Message shown when the member filter has no results."
   },
   "Delete": {
-    "translation": "Delete",
+    "translation": "Löschen",
     "description": "Button that deletes one alliance member."
   },
   "Other Names": {
-    "translation": "Other Names",
+    "translation": "Andere Namen",
     "description": "Button for editing alternate spellings of a member name."
   },
   "Other Names ({count})": {
-    "translation": "Other Names ({count})",
+    "translation": "Andere Namen ({count})",
     "description": "Button for alternate names. {count} is the number of aliases."
   },
   "Duplicate member": {
-    "translation": "Duplicate member",
+    "translation": "Doppeltes Mitglied",
     "description": "Warning title when a member name already exists."
   },
   "\"{name}\" is already in the member list.": {
-    "translation": "\"{name}\" is already in the member list.",
+    "translation": "\"{name}\" ist bereits in der Mitgliederliste.",
     "description": "Duplicate-name warning. {name} is the entered member name."
   },
   "Add": {
-    "translation": "Add",
+    "translation": "Hinzufügen",
     "description": "Button that adds the entered member or alias."
   },
   "Add multiple members": {
-    "translation": "Add multiple members",
+    "translation": "Mehrere Mitglieder hinzufügen",
     "description": "Heading in the batch member entry dialog."
   },
   "Paste one member per line. Existing names and duplicate lines are skipped.": {
-    "translation": "Paste one member per line. Existing names and duplicate lines are skipped.",
+    "translation": "Füge ein Mitglied pro Zeile ein. Vorhandene Namen und doppelte Zeilen werden übersprungen.",
     "description": "Instructions for batch member entry."
   },
   "Add Members": {
-    "translation": "Add Members",
+    "translation": "Mitglieder hinzufügen",
     "description": "Button that applies a batch of member names."
   },
   "Name (Z-A)": {
@@ -240,91 +240,91 @@
     "description": "Member column heading when sorted ascending by name."
   },
   "Remove all members": {
-    "translation": "Remove all members",
+    "translation": "Alle Mitglieder entfernen",
     "description": "Confirmation dialog title for clearing the roster."
   },
   "Remove all alliance members? This cannot be undone after saving.": {
-    "translation": "Remove all alliance members? This cannot be undone after saving.",
+    "translation": "Alle Allianzmitglieder entfernen? Dies kann nach dem Speichern nicht rückgängig gemacht werden.",
     "description": "Confirmation warning before clearing the roster."
   },
   "Other Names - {name}": {
-    "translation": "Other Names - {name}",
+    "translation": "Andere Namen - {name}",
     "description": "Alias editor window title. {name} is the member being edited."
   },
   "Other names for {name}": {
-    "translation": "Other names for {name}",
+    "translation": "Andere Namen für {name}",
     "description": "Alias editor heading. {name} is the member being edited."
   },
   "Add spelling or OCR variations for this member.": {
-    "translation": "Add spelling or OCR variations for this member.",
+    "translation": "Füge Schreibweisen oder OCR-Varianten für dieses Mitglied hinzu.",
     "description": "Instructions in the alias editor."
   },
   "Delete Selected": {
-    "translation": "Delete Selected",
+    "translation": "Ausgewählte löschen",
     "description": "Button that deletes the selected alias."
   },
   "Apply": {
-    "translation": "Apply",
+    "translation": "Anwenden",
     "description": "Button that applies alias changes."
   },
   "ISO week": {
-    "translation": "ISO week",
+    "translation": "ISO-Woche",
     "description": "Label for selecting the ISO calendar week."
   },
   "Drop six daily ranking videos and one weekly ranking video. They process in queue on this PC.": {
-    "translation": "Drop six daily ranking videos and one weekly ranking video. They process in queue on this PC.",
+    "translation": "Lege sechs tägliche Ranking-Videos und ein wöchentliches Ranking-Video ab. Sie werden auf diesem PC in der Warteschlange verarbeitet.",
     "description": "Desktop app instructions below the main heading."
   },
   "Open combined push ranking": {
-    "translation": "Open combined push ranking",
+    "translation": "Kombiniertes Push-Ranking öffnen",
     "description": "Description on the card that opens the combined push-day results."
   },
   "Ready": {
-    "translation": "Ready",
+    "translation": "Bereit",
     "description": "Idle application status."
   },
   "Copy Selected Table": {
-    "translation": "Copy Selected Table",
+    "translation": "Ausgewählte Tabelle kopieren",
     "description": "Button that copies the currently visible results table."
   },
   "Copy All Week Tables": {
-    "translation": "Copy All Week Tables",
+    "translation": "Alle Wochentabellen kopieren",
     "description": "Button that copies all daily and weekly result tables."
   },
   "Buy Crocco a coffee": {
-    "translation": "Buy Crocco a coffee",
+    "translation": "Crocco einen Kaffee spendieren",
     "description": "Title of the optional support QR-code window; Crocco is a proper name."
   },
   "Processing in progress": {
-    "translation": "Processing in progress",
+    "translation": "Verarbeitung läuft",
     "description": "Warning title when an action is unavailable during processing."
   },
   "Wait for queued recordings before changing weeks.": {
-    "translation": "Wait for queued recordings before changing weeks.",
+    "translation": "Warte auf die Aufnahmen in der Warteschlange, bevor du die Woche änderst.",
     "description": "Warning shown when changing weeks while recordings are queued."
   },
   "Could not open week": {
-    "translation": "Could not open week",
+    "translation": "Woche konnte nicht geöffnet werden",
     "description": "Error title when saved weekly data cannot be loaded."
   },
   "{week} loaded.": {
-    "translation": "{week} loaded.",
+    "translation": "{week} geladen.",
     "description": "Status after loading a saved week. {week} is an ISO week identifier."
   },
   "saved recording": {
-    "translation": "saved recording",
+    "translation": "gespeicherte Aufnahme",
     "description": "Fallback filename tooltip for results restored from history."
   },
   "Ready - hover for file": {
-    "translation": "Ready - hover for file",
+    "translation": "Bereit – für Datei mit der Maus darüberfahren",
     "description": "Drop-card state indicating results are ready and a filename tooltip is available."
   },
   "{count} push day(s) selected for {week}.": {
-    "translation": "{count} push day(s) selected for {week}.",
+    "translation": "{count} Push-Tag(e) für {week} ausgewählt.",
     "description": "Status after changing push-day selection. {count} is selected days and {week} is the ISO week."
   },
   "Edit result": {
-    "translation": "Edit result",
+    "translation": "Ergebnis bearbeiten",
     "description": "Dialog title for editing an extracted rank or points value."
   },
   "{field}:": {
@@ -332,115 +332,115 @@
     "description": "Label in an edit dialog. {field} is the localized field name."
   },
   "Invalid value": {
-    "translation": "Invalid value",
+    "translation": "Ungültiger Wert",
     "description": "Error title for invalid edited result data."
   },
   "{field} must be a whole number.": {
-    "translation": "{field} must be a whole number.",
+    "translation": "{field} muss eine ganze Zahl sein.",
     "description": "Validation error. {field} is the localized numeric field name."
   },
   "Name cannot be empty.": {
-    "translation": "Name cannot be empty.",
+    "translation": "Name darf nicht leer sein.",
     "description": "Validation error for a blank member name."
   },
   "Saved edit in {week}, {slot}.": {
-    "translation": "Saved edit in {week}, {slot}.",
+    "translation": "Bearbeitung in {week}, {slot} gespeichert.",
     "description": "Status after editing a result. {week} is an ISO week and {slot} a localized ranking slot."
   },
   "Edit": {
-    "translation": "Edit",
+    "translation": "Bearbeiten",
     "description": "Context-menu action for editing a result name."
   },
   "Add to alliance": {
-    "translation": "Add to alliance",
+    "translation": "Zur Allianz hinzufügen",
     "description": "Context-menu action that adds an extracted name to the roster."
   },
   "No unassigned members": {
-    "translation": "No unassigned members",
+    "translation": "Keine nicht zugewiesenen Mitglieder",
     "description": "Disabled menu item when no roster member can be assigned."
   },
   "Assign from alliance": {
-    "translation": "Assign from alliance",
+    "translation": "Aus Allianz zuweisen",
     "description": "Context-menu submenu for assigning a roster member."
   },
   "Edit name": {
-    "translation": "Edit name",
+    "translation": "Namen bearbeiten",
     "description": "Dialog title for correcting an extracted member name."
   },
   "Saved name \"{name}\" for {week}, {slot}.": {
-    "translation": "Saved name \"{name}\" for {week}, {slot}.",
+    "translation": "Name \"{name}\" für {week}, {slot} gespeichert.",
     "description": "Status after correcting a result name. Placeholders identify the name, ISO week, and localized slot."
   },
   "Member unavailable": {
-    "translation": "Member unavailable",
+    "translation": "Mitglied nicht verfügbar",
     "description": "Error title when a roster member disappeared before assignment."
   },
   "Alliance member \"{name}\" no longer exists.": {
-    "translation": "Alliance member \"{name}\" no longer exists.",
+    "translation": "Allianzmitglied \"{name}\" existiert nicht mehr.",
     "description": "Assignment error. {name} is the missing roster member."
   },
   "Assigned \"{alias}\" to {member} and refreshed {count} result set(s).": {
-    "translation": "Assigned \"{alias}\" to {member} and refreshed {count} result set(s).",
+    "translation": "\"{alias}\" wurde {member} zugewiesen und {count} Ergebnissatz/-sätze aktualisiert.",
     "description": "Status after assigning an OCR name. Placeholders are the alias, canonical member, and changed result count."
   },
   "Added \"{name}\" to the alliance and refreshed {count} result set(s).": {
-    "translation": "Added \"{name}\" to the alliance and refreshed {count} result set(s).",
+    "translation": "\"{name}\" wurde zur Allianz hinzugefügt und {count} Ergebnissatz/-sätze aktualisiert.",
     "description": "Status after adding an extracted name to the roster. {count} is changed result sets."
   },
   "Choose a recording": {
-    "translation": "Choose a recording",
+    "translation": "Aufnahme auswählen",
     "description": "Title of the MP4 file picker."
   },
   "MP4 video": {
-    "translation": "MP4 video",
+    "translation": "MP4-Video",
     "description": "File type label in the recording picker."
   },
   "Cancelling...": {
-    "translation": "Cancelling...",
+    "translation": "Wird abgebrochen...",
     "description": "Drop-card state while stopping video processing."
   },
   "Cancelling {slot}...": {
-    "translation": "Cancelling {slot}...",
+    "translation": "{slot} wird abgebrochen...",
     "description": "Status while stopping a slot. {slot} is the localized ranking slot."
   },
   "Cleared {slot}.": {
-    "translation": "Cleared {slot}.",
+    "translation": "{slot} gelöscht.",
     "description": "Status after removing a slot's recording and results."
   },
   "Unsupported file": {
-    "translation": "Unsupported file",
+    "translation": "Nicht unterstützte Datei",
     "description": "Error title for a dropped file that is not a valid MP4."
   },
   "Please drop an existing .mp4 video.": {
-    "translation": "Please drop an existing .mp4 video.",
+    "translation": "Bitte lege ein vorhandenes .mp4-Video ab.",
     "description": "Error message explaining the required recording format."
   },
   "Queued...": {
-    "translation": "Queued...",
+    "translation": "In Warteschlange...",
     "description": "Drop-card state while a recording waits for processing."
   },
   "Queued {filename} for {slot}. {count} waiting.": {
-    "translation": "Queued {filename} for {slot}. {count} waiting.",
+    "translation": "{filename} für {slot} in die Warteschlange gestellt. {count} warten.",
     "description": "Queue status with recording filename, localized slot, and waiting count."
   },
   "Cancelled queued video for {slot}. {count} waiting.": {
-    "translation": "Cancelled queued video for {slot}. {count} waiting.",
+    "translation": "Video in der Warteschlange für {slot} abgebrochen. {count} warten.",
     "description": "Status after removing a recording from the queue."
   },
   "Opening {filename} for {slot}...": {
-    "translation": "Opening {filename} for {slot}...",
+    "translation": "{filename} für {slot} wird geöffnet...",
     "description": "Status before processing begins; placeholders are filename and localized slot."
   },
   "Processing...": {
-    "translation": "Processing...",
+    "translation": "Wird verarbeitet...",
     "description": "Drop-card state while a recording is analyzed."
   },
   "OCR at {seconds:.2f}s": {
-    "translation": "OCR at {seconds:.2f}s",
+    "translation": "OCR bei {seconds:.2f}s",
     "description": "Processing progress at a video timestamp. {seconds} is elapsed video time."
   },
   "Processing at {seconds:.2f}s": {
-    "translation": "Processing at {seconds:.2f}s",
+    "translation": "Verarbeitung bei {seconds:.2f}s",
     "description": "Friendly drop-card progress at a video timestamp."
   },
   "{slot}: {message}": {
@@ -448,35 +448,35 @@
     "description": "Overall status combining a localized ranking slot and progress message."
   },
   "{slot} complete: {count} result(s) from {filename}.": {
-    "translation": "{slot} complete: {count} result(s) from {filename}.",
+    "translation": "{slot} abgeschlossen: {count} Ergebnis(se) aus {filename}.",
     "description": "Completion status with localized slot, result count, and source filename."
   },
   "{slot} processing failed": {
-    "translation": "{slot} processing failed",
+    "translation": "Verarbeitung von {slot} fehlgeschlagen",
     "description": "Status when processing a localized ranking slot fails."
   },
   "Failed - hover for file": {
-    "translation": "Failed - hover for file",
+    "translation": "Fehlgeschlagen – für Datei mit der Maus darüberfahren",
     "description": "Drop-card failure state with filename available as a tooltip."
   },
   "Could not process {slot}": {
-    "translation": "Could not process {slot}",
+    "translation": "{slot} konnte nicht verarbeitet werden",
     "description": "Error dialog title for a failed localized ranking slot."
   },
   "Cancelled {slot}.": {
-    "translation": "Cancelled {slot}.",
+    "translation": "{slot} abgebrochen.",
     "description": "Status after processing for a localized ranking slot is cancelled."
   },
   "Copied the {slot} table to the clipboard.": {
-    "translation": "Copied the {slot} table to the clipboard.",
+    "translation": "Die Tabelle {slot} wurde in die Zwischenablage kopiert.",
     "description": "Status after copying one localized result table."
   },
   "Copied all {count} tables for {week} to the clipboard.": {
-    "translation": "Copied all {count} tables for {week} to the clipboard.",
+    "translation": "Alle {count} Tabellen für {week} wurden in die Zwischenablage kopiert.",
     "description": "Status after copying all tables. {count} is table count and {week} the ISO week."
   },
   "Copied {count} row(s) to the clipboard.": {
-    "translation": "Copied {count} row(s) to the clipboard.",
+    "translation": "{count} Zeile(n) in die Zwischenablage kopiert.",
     "description": "Status after copying selected rows."
   }
 }

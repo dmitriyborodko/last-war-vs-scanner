@@ -9,6 +9,7 @@ from pathlib import Path
 
 LOCALES_DIR = Path(__file__).with_name("locales")
 DEFAULT_LANGUAGE = "en"
+LANGUAGE_FALLBACKS = {"pt": "pt_BR"}
 
 
 def _system_language() -> str:
@@ -22,7 +23,8 @@ def _system_language() -> str:
 def _language_candidates(language: str) -> tuple[str, ...]:
     normalized = language.replace("-", "_")
     base = normalized.split("_", 1)[0]
-    return tuple(dict.fromkeys((normalized, base, DEFAULT_LANGUAGE)))
+    fallback = LANGUAGE_FALLBACKS.get(base.lower(), base)
+    return tuple(dict.fromkeys((normalized, fallback, DEFAULT_LANGUAGE)))
 
 
 @lru_cache(maxsize=None)
