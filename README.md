@@ -49,8 +49,9 @@ The models are stored under `models/paddleocr`. Later video processing is comple
 
 1. Better to start with **Alliance Members** and paste a column of your teammates to fill the member table. It will help you to recognise names from your video better.
 2. Choose the ISO week in the top-right corner. The current week opens automatically; the selector also includes the previous two years and every saved week.
-3. Drag each `.mp4` onto its **Day 1** through **Day 6** or **Weekly Overall** box. Clicking the box opens its result tab.
-4. Select **Push days** to check who really deserves a train.
+3. Record a video on your phone where you scroll vs points for some day from top to bottom. Shorter videos process faster and there is no need to scroll too slow, 10 seconds should be enough for it :)
+4. Drag each `.mp4` onto its **Day 1** through **Day 6** or **Weekly Overall** box. Clicking the box opens its result tab.
+5. Select **Push days** to check who really deserves a train.
 
 Weekly history is stored locally under `data/weeks`; processed files are grouped under `output/weeks`. Opening a saved week restores its reviewed tables without rerunning video processing.
 
