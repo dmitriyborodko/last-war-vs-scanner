@@ -5,12 +5,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Python = Join-Path $Root ".venv\Scripts\python.exe"
+$VenvPython = Join-Path $Root ".venv\Scripts\python.exe"
 $AppName = "Last-War-VS-Scanner"
 Set-Location $Root
 
-if (-not (Test-Path $Python)) {
+if (Test-Path $VenvPython) {
+    $Python = $VenvPython
+} elseif ($SkipInstall) {
+    $Python = (Get-Command python -ErrorAction Stop).Source
+} else {
     py -3.12 -m venv (Join-Path $Root ".venv")
+    $Python = $VenvPython
 }
 
 if (-not $SkipInstall) {
