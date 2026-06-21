@@ -10,6 +10,8 @@ import tkinter.font as tkfont
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
+from PIL import Image, ImageDraw, ImageTk
+
 try:
     import winreg
 except ImportError:  # pragma: no cover - only unavailable outside Windows
@@ -46,6 +48,59 @@ SLOTS = DAILY_SLOTS + ("Weekly Overall",)
 PUSH_SUMMARY = "Push Days"
 VIEW_SLOTS = SLOTS + (PUSH_SUMMARY,)
 BASE_DPI = 96
+FONT_FAMILY = "Inter"
+
+
+def configure_app_fonts(root: tk.Misc) -> None:
+    for name in (
+        "TkDefaultFont",
+        "TkTextFont",
+        "TkFixedFont",
+        "TkMenuFont",
+        "TkHeadingFont",
+        "TkCaptionFont",
+        "TkSmallCaptionFont",
+        "TkIconFont",
+        "TkTooltipFont",
+    ):
+        try:
+            tkfont.nametofont(name, root=root).configure(family=FONT_FAMILY)
+        except tk.TclError:
+            pass
+
+
+def resampled_photo(path: Path, size: tuple[int, int], master: tk.Misc) -> ImageTk.PhotoImage:
+    with Image.open(path) as source:
+        image = source.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
+    return ImageTk.PhotoImage(image, master=master)
+
+
+def toggle_badge_photo(
+    master: tk.Misc,
+    fill: str,
+    outline: str,
+    check: str,
+    selected: bool,
+) -> ImageTk.PhotoImage:
+    scale = 4
+    size = 24
+    image = Image.new("RGBA", (size * scale, size * scale))
+    draw = ImageDraw.Draw(image)
+    draw.ellipse(
+        (scale, scale, (size - 1) * scale, (size - 1) * scale),
+        fill=fill,
+        outline=outline,
+        width=scale,
+    )
+    if selected:
+        points = [(6 * scale, 12 * scale), (10 * scale, 16 * scale), (18 * scale, 7 * scale)]
+        width = 3 * scale
+        draw.line(points, fill=check, width=width, joint="curve")
+        radius = width // 2
+        for x, y in (points[0], points[-1]):
+            draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=check)
+    image = image.resize((size, size), Image.Resampling.LANCZOS)
+    return ImageTk.PhotoImage(image, master=master)
 
 
 def slot_label(slot: str) -> str:
@@ -123,7 +178,7 @@ class RoundedButton(tk.Canvas):
             1, 25, 1, 16, 1, 10, 1, 1,
             smooth=True, splinesteps=24, width=1,
         )
-        self.label = self.create_text(width / 2, 13, text=text, font=("Segoe UI", 8))
+        self.label = self.create_text(width / 2, 13, text=text, font=(FONT_FAMILY, 8))
         self.bind("<Button-1>", lambda _event: self.command())
         self.bind("<Enter>", lambda _event: self.configure(cursor="hand2"))
         self.apply_theme()
@@ -143,11 +198,9 @@ class PushToggle(tk.Canvas):
         self.variable = variable
         self.command = command
         self.hovered = False
-        self.label = self.create_text(34, 13, text=tr("Push day"), font=("Segoe UI", 9))
-        self.badge = self.create_oval(69, 3, 91, 25, width=1)
-        self.tick = self.create_text(
-            80, 14, text="\u2713", font=("Segoe UI Symbol", 11, "bold"), anchor="center",
-        )
+        self.label = self.create_text(34, 13, text=tr("Push day"), font=(FONT_FAMILY, 9))
+        self._badge_image: ImageTk.PhotoImage | None = None
+        self.badge = self.create_image(80, 14)
         self.bind("<Button-1>", self._toggle)
         self.bind("<Enter>", self._enter)
         self.bind("<Leave>", self._leave)
@@ -171,16 +224,14 @@ class PushToggle(tk.Canvas):
         selected = self.variable.get()
         self.configure(background=colors["surface"])
         self.itemconfigure(self.label, fill=colors["text"])
-        self.itemconfigure(
-            self.badge,
+        self._badge_image = toggle_badge_photo(
+            self,
             fill=colors["select"] if selected else colors["border"] if self.hovered else colors["field"],
             outline=colors["select"] if selected else colors["text"] if self.hovered else colors["control_border"],
+            check=colors["select_text"],
+            selected=selected,
         )
-        self.itemconfigure(
-            self.tick,
-            fill=colors["select_text"],
-            state="normal" if selected else "hidden",
-        )
+        self.itemconfigure(self.badge, image=self._badge_image)
 
 
 class DropCard(tk.Canvas):
@@ -188,10 +239,11 @@ class DropCard(tk.Canvas):
         super().__init__(parent, height=104, highlightthickness=0, cursor="hand2")
         self.slot = slot
         self.filename = ""
+        self.selected = False
         self._tooltip: tk.Toplevel | None = None
         self._shape: int | None = None
         self._on_open = on_open
-        self.title = ttk.Label(self, text=slot_label(slot), font=("Segoe UI", 10, "bold"), anchor="center")
+        self.title = ttk.Label(self, text=slot_label(slot), font=(FONT_FAMILY, 10, "bold"), anchor="center")
         self.message = ttk.Label(self, text=tr("Drop MP4 here"), style="Muted.TLabel", anchor="center")
         self.progress = ttk.Progressbar(self, mode="determinate", maximum=100)
         self.browse = RoundedButton(self, text=tr("Browse"), width=54, command=on_browse)
@@ -248,9 +300,22 @@ class DropCard(tk.Canvas):
         colors = THEMES[bool(self.winfo_toplevel().system_theme.dark)]
         self.configure(background=colors["background"])
         if self._shape is not None:
-            self.itemconfigure(self._shape, fill=colors["surface"], outline=colors["border"])
-        self.title.configure(background=colors["surface"])
+            self.itemconfigure(
+                self._shape,
+                fill=colors["surface"],
+                outline=colors["select"] if self.selected else colors["border"],
+                width=3 if self.selected else 1,
+            )
+        self.title.configure(
+            background=colors["surface"],
+            foreground=colors["select"] if self.selected else colors["text"],
+        )
         self.message.configure(background=colors["surface"])
+
+    def set_selected(self, selected: bool) -> None:
+        if self.selected != selected:
+            self.selected = selected
+            self.apply_theme()
 
     def show_state(
         self,
@@ -292,7 +357,8 @@ class ActionCard(tk.Canvas):
     def __init__(self, parent, title: str, message: str, on_open) -> None:
         super().__init__(parent, height=104, highlightthickness=0, cursor="hand2")
         self._shape: int | None = None
-        self.title = ttk.Label(self, text=title, font=("Segoe UI", 10, "bold"), anchor="center")
+        self.selected = False
+        self.title = ttk.Label(self, text=title, font=(FONT_FAMILY, 10, "bold"), anchor="center")
         self.message = ttk.Label(self, text=message, style="Muted.TLabel", anchor="center")
         self._windows = [
             self.create_window(0, 0, window=self.title),
@@ -316,15 +382,28 @@ class ActionCard(tk.Canvas):
         colors = THEMES[bool(self.winfo_toplevel().system_theme.dark)]
         self.configure(background=colors["background"])
         if self._shape is not None:
-            self.itemconfigure(self._shape, fill=colors["surface"], outline=colors["border"])
-        self.title.configure(background=colors["surface"])
+            self.itemconfigure(
+                self._shape,
+                fill=colors["surface"],
+                outline=colors["select"] if self.selected else colors["border"],
+                width=3 if self.selected else 1,
+            )
+        self.title.configure(
+            background=colors["surface"],
+            foreground=colors["select"] if self.selected else colors["text"],
+        )
         self.message.configure(background=colors["surface"])
+
+    def set_selected(self, selected: bool) -> None:
+        if self.selected != selected:
+            self.selected = selected
+            self.apply_theme()
 
 
 class SupportButton(ttk.Label):
     def __init__(self, parent, command) -> None:
-        self._light_image = tk.PhotoImage(file=str(ASSETS_DIR / "white-button.png")).subsample(8)
-        self._dark_image = tk.PhotoImage(file=str(ASSETS_DIR / "black-button.png")).subsample(8)
+        self._light_image = resampled_photo(ASSETS_DIR / "white-button.png", (136, 38), parent)
+        self._dark_image = resampled_photo(ASSETS_DIR / "black-button.png", (136, 38), parent)
         super().__init__(
             parent,
             cursor="hand2",
@@ -581,7 +660,7 @@ class MemberEditor:
 
         frame = ttk.Frame(self.dialog, padding=16)
         frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text=tr("Alliance members"), font=("Segoe UI", 14, "bold")).pack(anchor="w")
+        ttk.Label(frame, text=tr("Alliance members"), font=(FONT_FAMILY, 14, "bold")).pack(anchor="w")
         ttk.Label(
             frame,
             text=tr("Add members individually or in a batch. Double-click a name to edit it in place."),
@@ -607,11 +686,11 @@ class MemberEditor:
         table_frame.pack(fill="both", expand=True)
         header = ttk.Frame(table_frame, padding=(8, 6))
         header.pack(fill="x")
-        ttk.Label(header, text="#", width=4, font=("Segoe UI", 9, "bold")).pack(side="left")
-        self.name_header = ttk.Label(header, text=tr("Name"), font=("Segoe UI", 9, "bold"), cursor="hand2")
+        ttk.Label(header, text="#", width=4, font=(FONT_FAMILY, 9, "bold")).pack(side="left")
+        self.name_header = ttk.Label(header, text=tr("Name"), font=(FONT_FAMILY, 9, "bold"), cursor="hand2")
         self.name_header.pack(side="left")
         self.name_header.bind("<Button-1>", lambda _event: self._sort_members())
-        ttk.Label(header, text=tr("Actions"), font=("Segoe UI", 9, "bold")).pack(side="right", padx=(0, 45))
+        ttk.Label(header, text=tr("Actions"), font=(FONT_FAMILY, 9, "bold")).pack(side="right", padx=(0, 45))
 
         self.canvas = tk.Canvas(table_frame, highlightthickness=0)
         scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.canvas.yview)
@@ -736,13 +815,13 @@ class MemberEditor:
 
         frame = ttk.Frame(popup, padding=14)
         frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text=tr("Add multiple members"), font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        ttk.Label(frame, text=tr("Add multiple members"), font=(FONT_FAMILY, 11, "bold")).pack(anchor="w")
         ttk.Label(
             frame, text=tr("Paste one member per line. Existing names and duplicate lines are skipped."),
             style="Muted.TLabel", wraplength=360,
         ).pack(anchor="w", pady=(2, 8))
 
-        editor = tk.Text(frame, wrap="none", undo=True, font=("Segoe UI", 10), height=8)
+        editor = tk.Text(frame, wrap="none", undo=True, font=(FONT_FAMILY, 10), height=8)
         editor.pack(fill="both", expand=True)
 
         controls = ttk.Frame(frame)
@@ -823,7 +902,7 @@ class MemberEditor:
         popup.transient(self.dialog)
         frame = ttk.Frame(popup, padding=14)
         frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text=tr("Other names for {name}", name=name), font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        ttk.Label(frame, text=tr("Other names for {name}", name=name), font=(FONT_FAMILY, 11, "bold")).pack(anchor="w")
         ttk.Label(frame, text=tr("Add spelling or OCR variations for this member."), style="Muted.TLabel").pack(
             anchor="w", pady=(2, 8)
         )
@@ -836,7 +915,7 @@ class MemberEditor:
 
         list_frame = ttk.Frame(frame)
         list_frame.pack(fill="both", expand=True)
-        alias_list = tk.Listbox(list_frame, activestyle="dotbox", font=("Segoe UI", 10))
+        alias_list = tk.Listbox(list_frame, activestyle="dotbox", font=(FONT_FAMILY, 10))
         scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=alias_list.yview)
         alias_list.configure(yscrollcommand=scrollbar.set)
         alias_list.pack(side="left", fill="both", expand=True)
@@ -896,9 +975,13 @@ class ParserWindow:
     def __init__(self) -> None:
         enable_per_monitor_dpi()
         self.root = TkinterDnD.Tk()
+        configure_app_fonts(self.root)
         self.root.system_theme = SystemTheme(self.root)
         self.dpi_monitor = DpiMonitor(self.root)
-        self.root.title(tr("Last War VS Parser"))
+        self.app_icon = tk.PhotoImage(file=str(ASSETS_DIR / "last-war-vs-scanner.png"))
+        self.header_icon = tk.PhotoImage(file=str(ASSETS_DIR / "last-war-vs-scanner-64.png"))
+        self.root.iconphoto(True, self.app_icon)
+        self.root.title(tr("Last War VS Scanner"))
         set_scaled_window_size(self.root, 1100, 760, 760, 480)
 
         self.events: queue.Queue[tuple] = queue.Queue()
@@ -930,7 +1013,7 @@ class ParserWindow:
         header.pack(fill="x")
         week_area = ttk.Frame(header)
         week_area.pack(side="left", padx=(0, 18))
-        ttk.Label(week_area, text=tr("ISO week"), font=("Segoe UI", 9, "bold")).pack(anchor="w")
+        ttk.Label(week_area, text=tr("ISO week"), font=(FONT_FAMILY, 9, "bold")).pack(anchor="w")
         self.week_selector = ttk.Combobox(
             week_area,
             values=selectable_weeks(self.history_dir),
@@ -940,7 +1023,13 @@ class ParserWindow:
         self.week_selector.set(self.selected_week)
         self.week_selector.pack(anchor="w")
         self.week_selector.bind("<<ComboboxSelected>>", self._change_week)
-        ttk.Label(header, text=tr("Last War VS Ranking Parser"), font=("Segoe UI", 18, "bold")).pack(side="left")
+        ttk.Label(
+            header,
+            text=tr("Last War VS Scanner"),
+            image=self.header_icon,
+            compound="left",
+            font=(FONT_FAMILY, 18, "bold"),
+        ).pack(side="left", padx=(0, 8))
         ttk.Label(
             frame,
             text=tr("Drop six daily ranking videos and one weekly ranking video. They process in queue on this PC."),
@@ -988,6 +1077,8 @@ class ParserWindow:
             table_frame = ttk.Frame(self.notebook)
             self.notebook.add(table_frame, text=slot_label(slot))
             self.tables[slot] = self._build_table(table_frame, editable=slot != PUSH_SUMMARY)
+        self.notebook.bind("<<NotebookTabChanged>>", self._sync_selected_card)
+        self._sync_selected_card()
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x", pady=(12, 0))
         ttk.Button(buttons, text=tr("Alliance Members"), command=self._edit_members).pack(side="left")
@@ -1011,7 +1102,7 @@ class ParserWindow:
         popup.title(tr("Buy Crocco a coffee"))
         popup.transient(self.root)
         popup.resizable(False, False)
-        popup.qr_image = tk.PhotoImage(file=str(ASSETS_DIR / "crocco-support-qr.png")).subsample(8)
+        popup.qr_image = resampled_photo(ASSETS_DIR / "crocco-support-qr.png", (375, 375), popup)
         ttk.Label(popup, image=popup.qr_image).pack(padx=12, pady=12)
 
         def close_popup(_event: tk.Event | None = None) -> None:
@@ -1288,6 +1379,16 @@ class ParserWindow:
 
     def _select_slot(self, slot: str) -> None:
         self.notebook.select(VIEW_SLOTS.index(slot))
+        self._set_selected_card(slot)
+
+    def _sync_selected_card(self, _event=None) -> None:
+        selected_index = self.notebook.index(self.notebook.select())
+        self._set_selected_card(VIEW_SLOTS[selected_index])
+
+    def _set_selected_card(self, slot: str) -> None:
+        for card_slot, card in self.drop_areas.items():
+            card.set_selected(card_slot == slot)
+        self.push_summary_card.set_selected(slot == PUSH_SUMMARY)
 
     def _clear_slot(self, slot: str) -> None:
         if any(job[0] == slot for job in self.pending):

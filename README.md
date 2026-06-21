@@ -1,4 +1,4 @@
-# Last War VS Ranking Parser
+# Last War VS Scanner
 
 Local Windows tool for extracting alliance-member names, VS points, and visible ranks from an iPhone `.mp4` screen recording. Frames, OCR output, corrections, and exports remain on the PC.
 

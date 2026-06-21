@@ -1,5 +1,5 @@
 [project]
-name = "last-war-vs-parser"
+name = "last-war-vs-scanner"
 version = "0.1.0"
 description = "Local extraction and review of alliance-member VS rankings from iOS recordings"
 requires-python = ">=3.11"
@@ -7,4 +7,3 @@ requires-python = ">=3.11"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-

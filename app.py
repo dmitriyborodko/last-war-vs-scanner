@@ -15,8 +15,23 @@ from vsparser.pipeline import process_video  # noqa: E402
 from vsparser.roster import load_roster, remember_names, save_member_list  # noqa: E402
 
 
-st.set_page_config(page_title=tr("Last War VS Parser"), layout="wide")
-st.title(tr("Last War VS Ranking Parser"))
+APP_ICON = ROOT / "assets" / "last-war-vs-scanner.png"
+HEADER_ICON = ROOT / "assets" / "last-war-vs-scanner-64.png"
+
+st.set_page_config(page_title=tr("Last War VS Scanner"), page_icon=str(APP_ICON), layout="wide")
+st.markdown(
+    """
+    <style>
+    html, body, .stApp, .stApp * {
+        font-family: "Inter", sans-serif;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+header_icon, header_title = st.columns([1, 11], vertical_alignment="center")
+header_icon.image(str(HEADER_ICON), width=64)
+header_title.title(tr("Last War VS Scanner"))
 st.caption(tr("Local-only processing. Recordings and extracted data remain on this PC."))
 
 video_text = st.text_input(tr("MP4 path"), placeholder=str(ROOT / "recording.mp4"))
