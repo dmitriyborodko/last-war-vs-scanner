@@ -1,11 +1,11 @@
 {
   "Last War VS Scanner": {
     "translation": "Last War VS Scanner",
-    "description": "Application window and browser page title."
+    "description": "Application window title."
   },
   "Local-only processing. Recordings and extracted data remain on this PC.": {
     "translation": "Local-only processing. Recordings and extracted data remain on this PC.",
-    "description": "Privacy note below the Streamlit app heading."
+    "description": "Privacy note for local processing."
   },
   "MP4 path": {
     "translation": "MP4 path",
@@ -41,7 +41,7 @@
   },
   "Paste a column from Google Sheets. Edit the lines to add, rename, or remove members.": {
     "translation": "Paste a column from Google Sheets. Edit the lines to add, rename, or remove members.",
-    "description": "Help text explaining the Streamlit roster editor."
+    "description": "Help text explaining roster editing."
   },
   "Save Members": {
     "translation": "Save Members",
@@ -89,7 +89,7 @@
   },
   "Correct cells directly. Clear **Keep** to remove a row from exports.": {
     "translation": "Correct cells directly. Clear **Keep** to remove a row from exports.",
-    "description": "Instructions for editing extracted results in Streamlit; Keep is a column name."
+    "description": "Instructions for editing extracted results; Keep is a column name."
   },
   "Remember reviewed teammate names": {
     "translation": "Remember reviewed teammate names",

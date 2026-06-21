@@ -5,7 +5,7 @@
   },
   "Local-only processing. Recordings and extracted data remain on this PC.": {
     "translation": "Nur lokale Verarbeitung. Aufnahmen und extrahierte Daten bleiben auf diesem PC.",
-    "description": "Privacy note below the Streamlit app heading."
+    "description": "Privacy note for local processing."
   },
   "MP4 path": {
     "translation": "MP4-Pfad",
@@ -41,7 +41,7 @@
   },
   "Paste a column from Google Sheets. Edit the lines to add, rename, or remove members.": {
     "translation": "Füge eine Spalte aus Google Sheets ein. Bearbeite die Zeilen, um Mitglieder hinzuzufügen, umzubenennen oder zu entfernen.",
-    "description": "Help text explaining the Streamlit roster editor."
+    "description": "Help text explaining roster editing."
   },
   "Save Members": {
     "translation": "Mitglieder speichern",
@@ -89,7 +89,7 @@
   },
   "Correct cells directly. Clear **Keep** to remove a row from exports.": {
     "translation": "Korrigiere Zellen direkt. Entferne **Behalten**, um eine Zeile aus Exporten zu entfernen.",
-    "description": "Instructions for editing extracted results in Streamlit; Keep is a column name."
+    "description": "Instructions for editing extracted results; Keep is a column name."
   },
   "Remember reviewed teammate names": {
     "translation": "Überprüfte Teammitgliedernamen merken",

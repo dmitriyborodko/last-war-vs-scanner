@@ -32,13 +32,13 @@ if (-not $SkipModels) {
 & $Python -m vsparser.validate_release
 if ($LASTEXITCODE -ne 0) { throw "Release validation failed." }
 
-$Icon = Join-Path $Root "assets\last-war-vs-scanner.png"
+$Icon = Join-Path $Root "assets\last-war-vs-scanner.ico"
 & $Python -m PyInstaller `
     --noconfirm `
     --clean `
     --windowed `
     --onedir `
-    --contents-directory . `
+    --contents-directory _internal `
     --name $AppName `
     --icon $Icon `
     --paths (Join-Path $Root "src") `

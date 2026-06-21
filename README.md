@@ -7,13 +7,14 @@ Local Windows tool for extracting alliance-member names, VS points, and visible 
 - No recording or result is uploaded by the application.
 - OCR runs locally with RapidOCR/ONNX Runtime and PaddleOCR CPU models.
 - The tool only reads a supplied video. It does not control the game, collect credentials, or inspect network traffic.
-- Streamlit listens on `127.0.0.1` and telemetry is disabled in `.streamlit/config.toml`.
 
 ## Windows setup
 
 ### Recommended: release download
 
-Download `Last-War-VS-Scanner-windows-x64.zip` from the latest GitHub Release,
+[**Download Last War VS Scanner for Windows (ZIP)**](https://github.com/dmitriyborodko/last-war-vs-scanner/releases/latest/download/Last-War-VS-Scanner-windows-x64.zip)
+
+Download `Last-War-VS-Scanner-windows-x64.zip` from the [latest GitHub Release](https://github.com/dmitriyborodko/last-war-vs-scanner/releases/latest),
 extract the whole ZIP, and run `Last-War-VS-Scanner.exe`. Python is not required,
 and the OCR models are included for offline use. Windows SmartScreen may show a
 warning until releases are code-signed; use **More info** only if the download is
@@ -53,8 +54,6 @@ The models are stored under `models/paddleocr`. Later video processing is comple
 6. Review each result in its matching table tab. Double-click a rank, name, or points cell to edit it. Edits are saved immediately. Select rows and press `Ctrl+C`, or use **Copy Selected Table** / **Copy All Week Tables**.
 
 Weekly history is stored locally under `data/weeks`; processed files are grouped under `output/weeks`. Opening a saved week restores its reviewed tables without rerunning video processing.
-
-The previous browser-based review interface remains available with `.venv\Scripts\python.exe -m streamlit run app.py`.
 
 Raw automatic outputs are also saved as `observations.json`, `results.json`, `vs_rankings.csv`, and `vs_rankings.xlsx` in the output folder. Selected source frames are kept under `frames`.
 

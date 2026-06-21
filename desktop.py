@@ -26,6 +26,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 ASSETS_DIR = ROOT / "assets"
 SUPPORT_URL = "https://buymeacoffee.com/crocco"
+WINDOWS_APP_ID = "Crocco.LastWarVSScanner"
 
 from vsparser.pipeline import process_video  # noqa: E402
 from vsparser.localization import tr  # noqa: E402
@@ -592,6 +593,15 @@ def enable_per_monitor_dpi() -> None:
             pass
 
 
+def set_windows_app_id() -> None:
+    if sys.platform != "win32":
+        return
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(WINDOWS_APP_ID)
+    except (AttributeError, OSError):
+        pass
+
+
 def window_dpi(window: tk.Misc) -> int:
     if sys.platform == "win32":
         try:
@@ -977,6 +987,7 @@ class MemberEditor:
 class ParserWindow:
     def __init__(self) -> None:
         enable_per_monitor_dpi()
+        set_windows_app_id()
         self.root = TkinterDnD.Tk()
         configure_app_fonts(self.root)
         self.root.system_theme = SystemTheme(self.root)

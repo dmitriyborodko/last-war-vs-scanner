@@ -20,7 +20,7 @@ def test_all_static_translation_calls_exist_in_english_catalog():
     root = Path(__file__).parents[1]
     path = Path(localization.__file__).with_name("locales") / "en.json"
     catalog = json.loads(path.read_text(encoding="utf-8"))
-    sources = [root / "app.py", root / "desktop.py", root / "src" / "vsparser" / "pipeline.py"]
+    sources = [root / "desktop.py", root / "src" / "vsparser" / "pipeline.py"]
     used = set()
     for source in sources:
         tree = ast.parse(source.read_text(encoding="utf-8"))
