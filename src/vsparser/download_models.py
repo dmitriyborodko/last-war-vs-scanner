@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import shutil
+
 from .ocr import MODEL_NAMES, default_model_dir
 
 
 def main() -> None:
     try:
-        from paddleocr import TextRecognition
+        from paddlex.inference.utils.official_models import official_models
     except ImportError as error:
         raise SystemExit("Install requirements.txt before downloading OCR models.") from error
 
@@ -14,7 +16,8 @@ def main() -> None:
     for model_name in dict.fromkeys(MODEL_NAMES.values()):
         target = root / model_name
         print(f"Preparing {model_name} in {target}")
-        TextRecognition(model_name=model_name, model_dir=str(target), device="cpu")
+        source = official_models.get_model_path(model_name)
+        shutil.copytree(source, target, dirs_exist_ok=True)
     print(f"Models ready. Processing can now remain offline: {root}")
 
 
