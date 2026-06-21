@@ -7,6 +7,7 @@ import sys
 import threading
 import tkinter as tk
 import tkinter.font as tkfont
+import webbrowser
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -24,6 +25,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
 ASSETS_DIR = ROOT / "assets"
+SUPPORT_URL = "https://buymeacoffee.com/crocco"
 
 from vsparser.pipeline import process_video  # noqa: E402
 from vsparser.localization import tr  # noqa: E402
@@ -488,6 +490,7 @@ class SystemTheme:
         style.configure(".", background=colors["background"], foreground=colors["text"])
         style.configure("TLabel", background=colors["background"], foreground=colors["text"])
         style.configure("Muted.TLabel", foreground=colors["muted"])
+        style.configure("Link.TLabel", foreground=colors["select"], font=(FONT_FAMILY, 9, "underline"))
         style.configure("TButton", background=colors["surface"], bordercolor=colors["border"])
         style.map("TButton", background=[("active", colors["border"])])
         style.configure(
@@ -1107,7 +1110,12 @@ class ParserWindow:
         popup.transient(self.root)
         popup.resizable(False, False)
         popup.qr_image = resampled_photo(ASSETS_DIR / "crocco-support-qr.png", (375, 375), popup)
-        ttk.Label(popup, image=popup.qr_image).pack(padx=12, pady=12)
+        ttk.Label(popup, image=popup.qr_image).pack(padx=12, pady=(12, 6))
+        support_link = ttk.Label(popup, text=SUPPORT_URL, cursor="hand2", style="Link.TLabel")
+        support_link.pack(padx=12, pady=(0, 12))
+        support_link.bind("<Button-1>", lambda _event: webbrowser.open_new_tab(SUPPORT_URL))
+        support_link.bind("<Return>", lambda _event: webbrowser.open_new_tab(SUPPORT_URL))
+        support_link.configure(takefocus=True)
 
         def close_popup(_event: tk.Event | None = None) -> None:
             popup.destroy()
