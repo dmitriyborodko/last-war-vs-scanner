@@ -11,6 +11,16 @@ Local Windows tool for extracting alliance-member names, VS points, and visible 
 
 ## Windows setup
 
+### Recommended: release download
+
+Download `Last-War-VS-Scanner-windows-x64.zip` from the latest GitHub Release,
+extract the whole ZIP, and run `Last-War-VS-Scanner.exe`. Python is not required,
+and the OCR models are included for offline use. Windows SmartScreen may show a
+warning until releases are code-signed; use **More info** only if the download is
+from this repository's Releases page.
+
+### Run from source
+
 Install 64-bit Python 3.11 or 3.12, then copy the iPhone recording to the PC using a USB cable or another local transfer method. From PowerShell:
 
 ```powershell
@@ -64,6 +74,20 @@ The released app must include the complete Python environment from `requirements
 ```
 
 This fails if Paddle/RapidOCR runtime packages or any of the three unique recognition model directories are absent. Run this validation inside the same packaged environment used by the executable.
+
+To make a local portable build, run `./build.ps1`. It creates
+`dist/Last-War-VS-Scanner-windows-x64.zip`. GitHub Actions runs the same build for
+every tag beginning with `v` and attaches the ZIP to a GitHub Release. A normal
+release sequence is:
+
+```powershell
+git tag v0.1.0
+git push origin main --tags
+```
+
+Before the first public release, choose and add a `LICENSE`, update repository
+URLs/support details, and test the ZIP on a clean Windows machine. Code signing
+is optional but is the proper way to remove the unfamiliar-publisher warning.
 
 ## Localization
 
