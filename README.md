@@ -35,7 +35,7 @@ The models are stored under `models/paddleocr`. Later video processing is comple
 
 ## Use
 
-1. Choose the ISO week in the top-left corner. The current week opens automatically; the selector also includes the previous two years and every saved week.
+1. Choose the ISO week in the top-right corner. The current week opens automatically; the selector also includes the previous two years and every saved week.
 2. Drag each `.mp4` onto its **Day 1** through **Day 6** or **Weekly Overall** box, or use the box's **Browse** button. Clicking the box opens its result tab.
 3. Every daily box is a **Push day** by default; uncheck any day you want to exclude. Click the **Push Days** box to see each member's summed points and recalculated rank.
 4. Optionally select **Alliance Members** and paste a Google Sheets column to fill the member table. Double-click a name to edit it, or use its **Other Names** and **Delete** buttons, then save the table.

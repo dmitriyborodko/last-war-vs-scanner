@@ -1011,8 +1011,17 @@ class ParserWindow:
 
         header = ttk.Frame(frame)
         header.pack(fill="x")
-        week_area = ttk.Frame(header)
-        week_area.pack(side="left", padx=(0, 18))
+        ttk.Label(
+            header,
+            text=tr("Last War VS Scanner"),
+            image=self.header_icon,
+            compound="left",
+            font=(FONT_FAMILY, 18, "bold"),
+        ).pack(side="left", padx=(0, 8))
+        header_actions = ttk.Frame(header)
+        header_actions.pack(side="right")
+        week_area = ttk.Frame(header_actions)
+        week_area.pack(side="left", padx=(0, 12))
         ttk.Label(week_area, text=tr("ISO week"), font=(FONT_FAMILY, 9, "bold")).pack(anchor="w")
         self.week_selector = ttk.Combobox(
             week_area,
@@ -1023,13 +1032,9 @@ class ParserWindow:
         self.week_selector.set(self.selected_week)
         self.week_selector.pack(anchor="w")
         self.week_selector.bind("<<ComboboxSelected>>", self._change_week)
-        ttk.Label(
-            header,
-            text=tr("Last War VS Scanner"),
-            image=self.header_icon,
-            compound="left",
-            font=(FONT_FAMILY, 18, "bold"),
-        ).pack(side="left", padx=(0, 8))
+        ttk.Button(header_actions, text=tr("Alliance Members"), command=self._edit_members).pack(
+            side="left", anchor="s"
+        )
         ttk.Label(
             frame,
             text=tr("Drop six daily ranking videos and one weekly ranking video. They process in queue on this PC."),
@@ -1081,9 +1086,8 @@ class ParserWindow:
         self._sync_selected_card()
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x", pady=(12, 0))
-        ttk.Button(buttons, text=tr("Alliance Members"), command=self._edit_members).pack(side="left")
         ttk.Button(buttons, text=tr("Copy Selected Table"), command=self._copy_selected_table).pack(
-            side="left", padx=(8, 0)
+            side="left"
         )
         ttk.Button(buttons, text=tr("Copy All Week Tables"), command=self._copy_all_week_tables).pack(
             side="left", padx=(8, 0)
