@@ -23,6 +23,18 @@
     "translation": "Membres de l'Alliance",
     "description": "Button and dialog title for managing alliance members."
   },
+  "Start here": {
+    "translation": "Commencez ici",
+    "description": "Heading for the first-launch tip pointing to the alliance members button."
+  },
+  "Add your alliance members first so scanned names can be matched correctly.": {
+    "translation": "Ajoutez d'abord les membres de votre alliance afin que les noms analysés puissent être correctement associés.",
+    "description": "First-launch tip explaining why the alliance roster should be added before scanning."
+  },
+  "Got it": {
+    "translation": "Compris",
+    "description": "Button that dismisses the first-launch tutorial tip."
+  },
   "Alliance members": {
     "translation": "Membres de l'Alliance",
     "description": "Heading in the alliance member editor."

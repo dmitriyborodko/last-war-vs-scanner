@@ -52,6 +52,20 @@ PUSH_SUMMARY = "Push Days"
 VIEW_SLOTS = SLOTS + (PUSH_SUMMARY,)
 BASE_DPI = 96
 FONT_FAMILY = "Inter"
+TUTORIAL_MARKER = ".tutorial_alliance_members_v2_seen"
+
+
+def should_show_first_launch_tip(data_dir: Path) -> bool:
+    return not (data_dir / TUTORIAL_MARKER).exists()
+
+
+def mark_first_launch_tip_seen(data_dir: Path) -> None:
+    """Persist the tutorial state only after the callout was actually displayed."""
+    try:
+        data_dir.mkdir(parents=True, exist_ok=True)
+        (data_dir / TUTORIAL_MARKER).touch(exist_ok=True)
+    except OSError:
+        pass
 
 
 def configure_app_fonts(root: tk.Misc) -> None:
@@ -1013,11 +1027,14 @@ class ParserWindow:
         self.source_names: dict[str, str] = {slot: "" for slot in SLOTS}
         self.push_days: dict[str, bool] = {slot: True for slot in DAILY_SLOTS}
         self.support_popup: tk.Toplevel | None = None
+        self.tutorial_popup: tk.Toplevel | None = None
 
         self._build_ui()
         self.root.system_theme.theme_window(self.root)
         self._load_selected_week()
         self.root.after(100, self._handle_events)
+        if should_show_first_launch_tip(ROOT / "data"):
+            self.root.after_idle(self._show_alliance_members_tip)
 
     def _build_ui(self) -> None:
         frame = ttk.Frame(self.root, padding=16)
@@ -1046,7 +1063,10 @@ class ParserWindow:
         self.week_selector.set(self.selected_week)
         self.week_selector.pack(anchor="w")
         self.week_selector.bind("<<ComboboxSelected>>", self._change_week)
-        ttk.Button(header_actions, text=tr("Alliance Members"), command=self._edit_members).pack(
+        self.alliance_members_button = ttk.Button(
+            header_actions, text=tr("Alliance Members"), command=self._edit_members,
+        )
+        self.alliance_members_button.pack(
             side="left", anchor="s"
         )
         ttk.Label(
@@ -1632,11 +1652,50 @@ class ParserWindow:
         self.status.configure(text=tr("Copied {count} row(s) to the clipboard.", count=len(items)))
 
     def _edit_members(self) -> None:
+        self._dismiss_alliance_members_tip()
         MemberEditor(
             self.root,
             self.roster_path,
             lambda count: self.status.configure(text=tr("Saved {count} alliance member(s).", count=count)),
         )
+
+    def _show_alliance_members_tip(self) -> None:
+        if self.tutorial_popup is not None or not self.root.winfo_exists():
+            return
+        self.root.update_idletasks()
+        popup = tk.Toplevel(self.root)
+        self.tutorial_popup = popup
+        popup.overrideredirect(True)
+        popup.transient(self.root)
+
+        frame = ttk.Frame(popup, padding=12, relief="solid", borderwidth=1)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text=tr("Start here"), font=(FONT_FAMILY, 11, "bold")).pack(anchor="w")
+        ttk.Label(
+            frame,
+            text=tr("Add your alliance members first so scanned names can be matched correctly."),
+            wraplength=290,
+            justify="left",
+        ).pack(anchor="w", pady=(4, 10))
+        ttk.Button(frame, text=tr("Got it"), command=self._dismiss_alliance_members_tip).pack(anchor="e")
+
+        popup.update_idletasks()
+        button = self.alliance_members_button
+        x = button.winfo_rootx() + button.winfo_width() - popup.winfo_reqwidth()
+        y = button.winfo_rooty() + button.winfo_height() + 6
+        popup.geometry(f"+{max(0, x)}+{max(0, y)}")
+        popup.bind("<Escape>", lambda _event: self._dismiss_alliance_members_tip())
+        self.root.system_theme.theme_window(popup)
+        popup.lift(self.root)
+        popup.attributes("-topmost", True)
+        popup.after(250, lambda: popup.attributes("-topmost", False) if popup.winfo_exists() else None)
+        button.focus_set()
+
+    def _dismiss_alliance_members_tip(self) -> None:
+        if self.tutorial_popup is not None:
+            self.tutorial_popup.destroy()
+            self.tutorial_popup = None
+            mark_first_launch_tip_seen(ROOT / "data")
 
     def run(self) -> None:
         self.root.mainloop()
