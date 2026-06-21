@@ -65,6 +65,19 @@ The released app must include the complete Python environment from `requirements
 
 This fails if Paddle/RapidOCR runtime packages or any of the three unique recognition model directories are absent. Run this validation inside the same packaged environment used by the executable.
 
+## Localization
+
+English UI copy lives in `src/vsparser/locales/en.json`. Every entry contains a
+`translation` and a translator-facing `description`. To add a language, copy that
+file to the matching locale name (for example `de.json` or `de_AT.json`) and
+translate only the `translation` values. Keep source keys and named placeholders
+such as `{count}` unchanged.
+
+The app uses the operating-system locale by default. Set `VSPARSER_LANGUAGE` to
+preview a specific catalog, for example `$env:VSPARSER_LANGUAGE = "de"` in
+PowerShell. Region-specific catalogs fall back to the base language and then to
+English.
+
 ## Current tuning and extension points
 
 The pipeline uses resolution-relative coordinates and OCR header/color anchors, so it is not tied to one iPhone resolution. Portrait recordings with the same ranking layout are expected to work best.

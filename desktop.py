@@ -21,7 +21,10 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
+ASSETS_DIR = ROOT / "assets"
+
 from vsparser.pipeline import process_video  # noqa: E402
+from vsparser.localization import tr  # noqa: E402
 from vsparser.roster import (  # noqa: E402
     apply_roster_alias,
     available_roster_members,
@@ -35,7 +38,7 @@ from vsparser.week_storage import iso_week, load_week, save_week, selectable_wee
 
 
 DISPLAY_COLUMNS = ("rank", "name", "points", "confidence", "issues")
-HEADINGS = ("Rank", "Name", "Points", "Confidence", "Issues")
+HEADINGS = tuple(tr(value) for value in ("Rank", "Name", "Points", "Confidence", "Issues"))
 COPY_COLUMN_COUNT = 3
 COPY_HEADINGS = HEADINGS[:COPY_COLUMN_COUNT]
 DAILY_SLOTS = tuple(f"Day {number}" for number in range(1, 7))
@@ -43,6 +46,12 @@ SLOTS = DAILY_SLOTS + ("Weekly Overall",)
 PUSH_SUMMARY = "Push Days"
 VIEW_SLOTS = SLOTS + (PUSH_SUMMARY,)
 BASE_DPI = 96
+
+
+def slot_label(slot: str) -> str:
+    if slot.startswith("Day "):
+        return tr("Day {number}", number=slot.removeprefix("Day "))
+    return tr(slot)
 
 try:
     locale.setlocale(locale.LC_NUMERIC, "")
@@ -134,7 +143,7 @@ class PushToggle(tk.Canvas):
         self.variable = variable
         self.command = command
         self.hovered = False
-        self.label = self.create_text(34, 13, text="Push day", font=("Segoe UI", 9))
+        self.label = self.create_text(34, 13, text=tr("Push day"), font=("Segoe UI", 9))
         self.badge = self.create_oval(69, 3, 91, 25, width=1)
         self.tick = self.create_text(
             80, 14, text="\u2713", font=("Segoe UI Symbol", 11, "bold"), anchor="center",
@@ -182,10 +191,10 @@ class DropCard(tk.Canvas):
         self._tooltip: tk.Toplevel | None = None
         self._shape: int | None = None
         self._on_open = on_open
-        self.title = ttk.Label(self, text=slot, font=("Segoe UI", 10, "bold"), anchor="center")
-        self.message = ttk.Label(self, text="Drop MP4 here", style="Muted.TLabel", anchor="center")
+        self.title = ttk.Label(self, text=slot_label(slot), font=("Segoe UI", 10, "bold"), anchor="center")
+        self.message = ttk.Label(self, text=tr("Drop MP4 here"), style="Muted.TLabel", anchor="center")
         self.progress = ttk.Progressbar(self, mode="determinate", maximum=100)
-        self.browse = RoundedButton(self, text="Browse", width=54, command=on_browse)
+        self.browse = RoundedButton(self, text=tr("Browse"), width=54, command=on_browse)
         self.clear = RoundedButton(self, text="X", width=26, command=on_clear)
         self.push_var = tk.BooleanVar(value=False)
         self.push = PushToggle(
@@ -310,6 +319,26 @@ class ActionCard(tk.Canvas):
             self.itemconfigure(self._shape, fill=colors["surface"], outline=colors["border"])
         self.title.configure(background=colors["surface"])
         self.message.configure(background=colors["surface"])
+
+
+class SupportButton(ttk.Label):
+    def __init__(self, parent, command) -> None:
+        self._light_image = tk.PhotoImage(file=str(ASSETS_DIR / "white-button.png")).subsample(8)
+        self._dark_image = tk.PhotoImage(file=str(ASSETS_DIR / "black-button.png")).subsample(8)
+        super().__init__(
+            parent,
+            cursor="hand2",
+            takefocus=True,
+        )
+        self.bind("<Button-1>", command)
+        self.bind("<Return>", command)
+        self.bind("<space>", command)
+        self.apply_theme()
+
+    def apply_theme(self) -> None:
+        dark = bool(self.winfo_toplevel().system_theme.dark)
+        self.configure(image=self._dark_image if dark else self._light_image)
+
 
 def system_uses_dark_theme() -> bool:
     if sys.platform != "win32" or winreg is None:
@@ -439,6 +468,8 @@ class SystemTheme:
         if isinstance(widget, (tk.Tk, tk.Toplevel)):
             widget.configure(background=colors["background"])
             set_window_dark_mode(widget, bool(self.dark))
+        elif isinstance(widget, SupportButton):
+            widget.apply_theme()
         elif isinstance(widget, (RoundedButton, PushToggle)):
             widget.apply_theme()
         elif isinstance(widget, (DropCard, ActionCard)):
@@ -535,7 +566,7 @@ class MemberEditor:
         self.on_saved = on_saved
         self.system_theme = parent.winfo_toplevel().system_theme
         self.dialog = tk.Toplevel(parent)
-        self.dialog.title("Alliance Members")
+        self.dialog.title(tr("Alliance Members"))
         self.system_theme.theme_window(self.dialog)
         set_scaled_window_size(self.dialog, 620, 560, 480, 340)
         self.dialog.transient(parent)
@@ -544,29 +575,29 @@ class MemberEditor:
             self.members = load_roster(roster_path)
         except (OSError, ValueError, TypeError) as error:
             self.dialog.destroy()
-            messagebox.showerror("Could not open members", str(error), parent=parent)
+            messagebox.showerror(tr("Could not open members"), str(error), parent=parent)
             return
         self.name_sort_descending: bool | None = None
 
         frame = ttk.Frame(self.dialog, padding=16)
         frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text="Alliance members", font=("Segoe UI", 14, "bold")).pack(anchor="w")
+        ttk.Label(frame, text=tr("Alliance members"), font=("Segoe UI", 14, "bold")).pack(anchor="w")
         ttk.Label(
             frame,
-            text="Add members individually or in a batch. Double-click a name to edit it in place.",
+            text=tr("Add members individually or in a batch. Double-click a name to edit it in place."),
             wraplength=570,
             style="Muted.TLabel",
         ).pack(anchor="w", pady=(4, 10))
 
         toolbar = ttk.Frame(frame)
         toolbar.pack(fill="x", pady=(0, 8))
-        ttk.Button(toolbar, text="Add Multiple Entries", command=self._add_multiple_entries).pack(side="left")
-        self.remove_all_button = ttk.Button(toolbar, text="Remove All", command=self._remove_all)
+        ttk.Button(toolbar, text=tr("Add Multiple Entries"), command=self._add_multiple_entries).pack(side="left")
+        self.remove_all_button = ttk.Button(toolbar, text=tr("Remove All"), command=self._remove_all)
         self.remove_all_button.pack(side="right")
 
         search_row = ttk.Frame(frame)
         search_row.pack(fill="x", pady=(0, 8))
-        ttk.Label(search_row, text="Search").pack(side="left", padx=(0, 8))
+        ttk.Label(search_row, text=tr("Search")).pack(side="left", padx=(0, 8))
         self.search_query = tk.StringVar()
         search_entry = ttk.Entry(search_row, textvariable=self.search_query)
         search_entry.pack(side="left", fill="x", expand=True)
@@ -577,10 +608,10 @@ class MemberEditor:
         header = ttk.Frame(table_frame, padding=(8, 6))
         header.pack(fill="x")
         ttk.Label(header, text="#", width=4, font=("Segoe UI", 9, "bold")).pack(side="left")
-        self.name_header = ttk.Label(header, text="Name", font=("Segoe UI", 9, "bold"), cursor="hand2")
+        self.name_header = ttk.Label(header, text=tr("Name"), font=("Segoe UI", 9, "bold"), cursor="hand2")
         self.name_header.pack(side="left")
         self.name_header.bind("<Button-1>", lambda _event: self._sort_members())
-        ttk.Label(header, text="Actions", font=("Segoe UI", 9, "bold")).pack(side="right", padx=(0, 45))
+        ttk.Label(header, text=tr("Actions"), font=("Segoe UI", 9, "bold")).pack(side="right", padx=(0, 45))
 
         self.canvas = tk.Canvas(table_frame, highlightthickness=0)
         scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.canvas.yview)
@@ -594,8 +625,8 @@ class MemberEditor:
 
         controls = ttk.Frame(frame)
         controls.pack(fill="x", pady=(12, 0))
-        ttk.Button(controls, text="Cancel", command=self.dialog.destroy).pack(side="right")
-        ttk.Button(controls, text="Save Members", command=self._save).pack(side="right", padx=(0, 8))
+        ttk.Button(controls, text=tr("Cancel"), command=self.dialog.destroy).pack(side="right")
+        ttk.Button(controls, text=tr("Save Members"), command=self._save).pack(side="right", padx=(0, 8))
 
         self.dialog.bind("<MouseWheel>", self._scroll_members, add="+")
         self.dialog.bind("<Button-4>", self._scroll_members, add="+")
@@ -610,13 +641,13 @@ class MemberEditor:
         add_row.pack(fill="x")
         add_button = ttk.Button(add_row, text="+", width=3, command=self._begin_add_member)
         add_button.pack(side="left", padx=(0, 8))
-        add_label = ttk.Label(add_row, text="Add member", cursor="hand2")
+        add_label = ttk.Label(add_row, text=tr("Add member"), cursor="hand2")
         add_label.pack(side="left", fill="x", expand=True)
         add_label.bind("<Button-1>", lambda _event: self._begin_add_member())
         ttk.Separator(self.rows).pack(fill="x")
         if not self.members:
             ttk.Label(
-                self.rows, text="No members yet. Add one or add multiple entries to begin.",
+                self.rows, text=tr("No members yet. Add one or add multiple entries to begin."),
                 style="Muted.TLabel", padding=12,
             ).pack()
             return
@@ -633,7 +664,7 @@ class MemberEditor:
             ]
         if not members:
             ttk.Label(
-                self.rows, text="No members match your search.", style="Muted.TLabel", padding=12,
+                self.rows, text=tr("No members match your search."), style="Muted.TLabel", padding=12,
             ).pack()
             return
         for number, (name, aliases) in enumerate(members, start=1):
@@ -643,8 +674,8 @@ class MemberEditor:
             label = ttk.Label(row, text=name, cursor="xterm")
             label.pack(side="left", fill="x", expand=True)
             label.bind("<Double-Button-1>", lambda _event, current=name, widget=label: self._edit_name(current, widget))
-            ttk.Button(row, text="Delete", command=lambda current=name: self._delete(current)).pack(side="right")
-            alias_text = f"Other Names ({len(aliases)})" if aliases else "Other Names"
+            ttk.Button(row, text=tr("Delete"), command=lambda current=name: self._delete(current)).pack(side="right")
+            alias_text = tr("Other Names ({count})", count=len(aliases)) if aliases else tr("Other Names")
             ttk.Button(row, text=alias_text, command=lambda current=name: self._edit_aliases(current)).pack(
                 side="right", padx=(0, 6)
             )
@@ -664,7 +695,7 @@ class MemberEditor:
                 return "break"
             if any(self._name_key(existing) == self._name_key(name) for existing in self.members):
                 messagebox.showwarning(
-                    "Duplicate member", f'"{name}" is already in the member list.', parent=self.dialog,
+                    tr("Duplicate member"), tr('"{name}" is already in the member list.', name=name), parent=self.dialog,
                 )
                 entry.focus_set()
                 return "break"
@@ -672,7 +703,7 @@ class MemberEditor:
             self._render_rows()
             return "break"
 
-        ttk.Button(add_row, text="Add", command=add_member).pack(side="left", padx=(6, 0))
+        ttk.Button(add_row, text=tr("Add"), command=add_member).pack(side="left", padx=(6, 0))
         entry.bind("<Return>", add_member)
         entry.bind("<Escape>", lambda _event: self._render_rows())
         entry.focus_set()
@@ -699,15 +730,15 @@ class MemberEditor:
 
     def _add_multiple_entries(self) -> None:
         popup = tk.Toplevel(self.dialog)
-        popup.title("Add Multiple Entries")
+        popup.title(tr("Add Multiple Entries"))
         set_scaled_window_size(popup, 400, 320, 320, 240)
         popup.transient(self.dialog)
 
         frame = ttk.Frame(popup, padding=14)
         frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text="Add multiple members", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        ttk.Label(frame, text=tr("Add multiple members"), font=("Segoe UI", 11, "bold")).pack(anchor="w")
         ttk.Label(
-            frame, text="Paste one member per line. Existing names and duplicate lines are skipped.",
+            frame, text=tr("Paste one member per line. Existing names and duplicate lines are skipped."),
             style="Muted.TLabel", wraplength=360,
         ).pack(anchor="w", pady=(2, 8))
 
@@ -716,7 +747,7 @@ class MemberEditor:
 
         controls = ttk.Frame(frame)
         controls.pack(fill="x", pady=(10, 0))
-        ttk.Button(controls, text="Cancel", command=popup.destroy).pack(side="right")
+        ttk.Button(controls, text=tr("Cancel"), command=popup.destroy).pack(side="right")
 
         def add_entries() -> None:
             existing = {self._name_key(name) for name in self.members}
@@ -728,7 +759,7 @@ class MemberEditor:
             popup.destroy()
             self._render_rows()
 
-        ttk.Button(controls, text="Add Members", command=add_entries).pack(side="right", padx=(0, 8))
+        ttk.Button(controls, text=tr("Add Members"), command=add_entries).pack(side="right", padx=(0, 8))
         self.system_theme.theme_window(popup)
         editor.focus_set()
 
@@ -737,7 +768,7 @@ class MemberEditor:
             self.name_sort_descending = False
         else:
             self.name_sort_descending = not self.name_sort_descending
-        self.name_header.configure(text="Name (Z-A)" if self.name_sort_descending else "Name (A-Z)")
+        self.name_header.configure(text=tr("Name (Z-A)") if self.name_sort_descending else tr("Name (A-Z)"))
         self._render_rows()
 
     @staticmethod
@@ -757,7 +788,7 @@ class MemberEditor:
                 self._render_rows()
                 return
             if any(self._name_key(name) == self._name_key(new_name) for name in self.members if name != old_name):
-                messagebox.showwarning("Duplicate member", f'"{new_name}" is already in the member list.', parent=self.dialog)
+                messagebox.showwarning(tr("Duplicate member"), tr('"{name}" is already in the member list.', name=new_name), parent=self.dialog)
                 entry.focus_set()
                 return
             self.members = {
@@ -777,8 +808,8 @@ class MemberEditor:
         if not self.members:
             return
         if not messagebox.askokcancel(
-            "Remove all members",
-            "Remove all alliance members? This cannot be undone after saving.",
+            tr("Remove all members"),
+            tr("Remove all alliance members? This cannot be undone after saving."),
             parent=self.dialog,
         ):
             return
@@ -787,13 +818,13 @@ class MemberEditor:
 
     def _edit_aliases(self, name: str) -> None:
         popup = tk.Toplevel(self.dialog)
-        popup.title(f"Other Names - {name}")
+        popup.title(tr("Other Names - {name}", name=name))
         set_scaled_window_size(popup, 420, 360, 340, 280)
         popup.transient(self.dialog)
         frame = ttk.Frame(popup, padding=14)
         frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text=f"Other names for {name}", font=("Segoe UI", 11, "bold")).pack(anchor="w")
-        ttk.Label(frame, text="Add spelling or OCR variations for this member.", style="Muted.TLabel").pack(
+        ttk.Label(frame, text=tr("Other names for {name}", name=name), font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        ttk.Label(frame, text=tr("Add spelling or OCR variations for this member."), style="Muted.TLabel").pack(
             anchor="w", pady=(2, 8)
         )
 
@@ -832,22 +863,22 @@ class MemberEditor:
                 del aliases[selected[0]]
                 refresh_aliases()
 
-        ttk.Button(add_row, text="Add", command=add_alias).pack(side="left", padx=(6, 0))
-        ttk.Button(add_row, text="Delete Selected", command=delete_alias).pack(side="left", padx=(6, 0))
+        ttk.Button(add_row, text=tr("Add"), command=add_alias).pack(side="left", padx=(6, 0))
+        ttk.Button(add_row, text=tr("Delete Selected"), command=delete_alias).pack(side="left", padx=(6, 0))
         alias_entry.bind("<Return>", add_alias)
         alias_list.bind("<Delete>", lambda _event: delete_alias())
         refresh_aliases()
 
         controls = ttk.Frame(frame)
         controls.pack(fill="x", pady=(10, 0))
-        ttk.Button(controls, text="Cancel", command=popup.destroy).pack(side="right")
+        ttk.Button(controls, text=tr("Cancel"), command=popup.destroy).pack(side="right")
 
         def apply_aliases() -> None:
             self.members[name] = aliases
             popup.destroy()
             self._render_rows()
 
-        ttk.Button(controls, text="Apply", command=apply_aliases).pack(side="right", padx=(0, 8))
+        ttk.Button(controls, text=tr("Apply"), command=apply_aliases).pack(side="right", padx=(0, 8))
         self.system_theme.theme_window(popup)
         alias_entry.focus_set()
 
@@ -855,7 +886,7 @@ class MemberEditor:
         try:
             members = save_roster(self.roster_path, self.members)
         except (OSError, ValueError, TypeError) as error:
-            messagebox.showerror("Could not save members", str(error), parent=self.dialog)
+            messagebox.showerror(tr("Could not save members"), str(error), parent=self.dialog)
             return
         self.on_saved(len(members))
         self.dialog.destroy()
@@ -867,7 +898,7 @@ class ParserWindow:
         self.root = TkinterDnD.Tk()
         self.root.system_theme = SystemTheme(self.root)
         self.dpi_monitor = DpiMonitor(self.root)
-        self.root.title("Last War VS Parser")
+        self.root.title(tr("Last War VS Parser"))
         set_scaled_window_size(self.root, 1100, 760, 760, 480)
 
         self.events: queue.Queue[tuple] = queue.Queue()
@@ -884,6 +915,7 @@ class ParserWindow:
         self.selected_week = iso_week()
         self.source_names: dict[str, str] = {slot: "" for slot in SLOTS}
         self.push_days: dict[str, bool] = {slot: True for slot in DAILY_SLOTS}
+        self.support_popup: tk.Toplevel | None = None
 
         self._build_ui()
         self.root.system_theme.theme_window(self.root)
@@ -898,7 +930,7 @@ class ParserWindow:
         header.pack(fill="x")
         week_area = ttk.Frame(header)
         week_area.pack(side="left", padx=(0, 18))
-        ttk.Label(week_area, text="ISO week", font=("Segoe UI", 9, "bold")).pack(anchor="w")
+        ttk.Label(week_area, text=tr("ISO week"), font=("Segoe UI", 9, "bold")).pack(anchor="w")
         self.week_selector = ttk.Combobox(
             week_area,
             values=selectable_weeks(self.history_dir),
@@ -908,10 +940,10 @@ class ParserWindow:
         self.week_selector.set(self.selected_week)
         self.week_selector.pack(anchor="w")
         self.week_selector.bind("<<ComboboxSelected>>", self._change_week)
-        ttk.Label(header, text="Last War VS Ranking Parser", font=("Segoe UI", 18, "bold")).pack(side="left")
+        ttk.Label(header, text=tr("Last War VS Ranking Parser"), font=("Segoe UI", 18, "bold")).pack(side="left")
         ttk.Label(
             frame,
-            text="Drop six daily ranking videos and one weekly ranking video. They process in queue on this PC.",
+            text=tr("Drop six daily ranking videos and one weekly ranking video. They process in queue on this PC."),
             style="Muted.TLabel",
         ).pack(anchor="w", pady=(2, 12))
 
@@ -935,8 +967,8 @@ class ParserWindow:
             self.drop_areas[slot] = drop_area
         self.push_summary_card = ActionCard(
             drops,
-            PUSH_SUMMARY,
-            "Open combined push ranking",
+            slot_label(PUSH_SUMMARY),
+            tr("Open combined push ranking"),
             on_open=lambda: self._select_slot(PUSH_SUMMARY),
         )
         summary_index = len(SLOTS)
@@ -947,24 +979,53 @@ class ParserWindow:
         for column in range(4):
             drops.columnconfigure(column, weight=1)
 
-        self.status = ttk.Label(frame, text="Ready", padding=(0, 10, 0, 4))
+        self.status = ttk.Label(frame, text=tr("Ready"), padding=(0, 10, 0, 4))
         self.status.pack(fill="x")
 
         self.notebook = ttk.Notebook(frame, style="Tabless.TNotebook")
         self.notebook.pack(fill="both", expand=True)
         for slot in VIEW_SLOTS:
             table_frame = ttk.Frame(self.notebook)
-            self.notebook.add(table_frame, text=slot)
+            self.notebook.add(table_frame, text=slot_label(slot))
             self.tables[slot] = self._build_table(table_frame, editable=slot != PUSH_SUMMARY)
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x", pady=(12, 0))
-        ttk.Button(buttons, text="Alliance Members", command=self._edit_members).pack(side="left")
-        ttk.Button(buttons, text="Copy Selected Table", command=self._copy_selected_table).pack(
+        ttk.Button(buttons, text=tr("Alliance Members"), command=self._edit_members).pack(side="left")
+        ttk.Button(buttons, text=tr("Copy Selected Table"), command=self._copy_selected_table).pack(
             side="left", padx=(8, 0)
         )
-        ttk.Button(buttons, text="Copy All Week Tables", command=self._copy_all_week_tables).pack(
+        ttk.Button(buttons, text=tr("Copy All Week Tables"), command=self._copy_all_week_tables).pack(
             side="left", padx=(8, 0)
         )
+        support_button = SupportButton(buttons, self._open_support_qr)
+        support_button.pack(side="right", padx=(12, 0))
+
+    def _open_support_qr(self, _event: tk.Event | None = None) -> None:
+        if self.support_popup is not None and self.support_popup.winfo_exists():
+            self.support_popup.lift()
+            self.support_popup.focus_set()
+            return
+
+        popup = tk.Toplevel(self.root)
+        self.support_popup = popup
+        popup.title(tr("Buy Crocco a coffee"))
+        popup.transient(self.root)
+        popup.resizable(False, False)
+        popup.qr_image = tk.PhotoImage(file=str(ASSETS_DIR / "crocco-support-qr.png")).subsample(8)
+        ttk.Label(popup, image=popup.qr_image).pack(padx=12, pady=12)
+
+        def close_popup(_event: tk.Event | None = None) -> None:
+            popup.destroy()
+            self.support_popup = None
+
+        popup.protocol("WM_DELETE_WINDOW", close_popup)
+        popup.bind("<Escape>", close_popup)
+        self.root.system_theme.theme_window(popup)
+        popup.update_idletasks()
+        x = self.root.winfo_rootx() + (self.root.winfo_width() - popup.winfo_width()) // 2
+        y = self.root.winfo_rooty() + (self.root.winfo_height() - popup.winfo_height()) // 2
+        popup.geometry(f"+{max(0, x)}+{max(0, y)}")
+        popup.focus_set()
 
     def _build_table(self, table_frame: ttk.Frame, editable: bool = True) -> ttk.Treeview:
         table = ttk.Treeview(table_frame, columns=DISPLAY_COLUMNS, show="headings", selectmode="extended")
@@ -995,7 +1056,7 @@ class ParserWindow:
     def _change_week(self, _event=None) -> None:
         requested = self.week_selector.get()
         if self.current_job is not None or self.pending:
-            messagebox.showinfo("Processing in progress", "Wait for queued recordings before changing weeks.")
+            messagebox.showinfo(tr("Processing in progress"), tr("Wait for queued recordings before changing weeks."))
             self.week_selector.set(self.selected_week)
             return
         self.selected_week = requested
@@ -1005,7 +1066,7 @@ class ParserWindow:
         try:
             state = load_week(self.history_dir, self.selected_week)
         except (OSError, ValueError, TypeError) as error:
-            messagebox.showerror("Could not open week", str(error))
+            messagebox.showerror(tr("Could not open week"), str(error))
             state = {"slots": {}}
         stored_slots = state.get("slots", {})
         for slot in DAILY_SLOTS:
@@ -1019,7 +1080,7 @@ class ParserWindow:
             self.output_dirs[slot] = ROOT / output_value if output_value else None
             self._render_slot(slot)
         self._render_push_summary()
-        self.status.configure(text=f"{self.selected_week} loaded.")
+        self.status.configure(text=tr("{week} loaded.", week=self.selected_week))
 
     def _render_slot(self, slot: str) -> None:
         table = self.tables[slot]
@@ -1040,10 +1101,10 @@ class ParserWindow:
             table.insert("", "end", iid=str(index), values=values, tags=tags)
         if self.rows[slot]:
             self._fit_result_columns(table)
-            filename = self.source_names[slot] or "saved recording"
-            self.drop_areas[slot].show_state("Ready - hover for file", filename)
+            filename = self.source_names[slot] or tr("saved recording")
+            self.drop_areas[slot].show_state(tr("Ready - hover for file"), filename)
         else:
-            self.drop_areas[slot].show_state("Drop MP4 here", clear=False)
+            self.drop_areas[slot].show_state(tr("Drop MP4 here"), clear=False)
         if slot in DAILY_SLOTS:
             self._render_push_summary()
 
@@ -1065,7 +1126,7 @@ class ParserWindow:
         self._render_push_summary()
         self._save_selected_week()
         selected = sum(self.push_days.values())
-        self.status.configure(text=f"{selected} push day(s) selected for {self.selected_week}.")
+        self.status.configure(text=tr("{count} push day(s) selected for {week}.", count=selected, week=self.selected_week))
 
     def _save_selected_week(self) -> None:
         slots = {}
@@ -1100,7 +1161,8 @@ class ParserWindow:
         slot = next(name for name, candidate in self.tables.items() if candidate is table)
         row = self.rows[slot][int(item)]
         initial = "" if row.get(field) is None else str(row[field])
-        value = simpledialog.askstring("Edit result", f"{field.title()}:", initialvalue=initial, parent=self.root)
+        localized_field = tr(field.title())
+        value = simpledialog.askstring(tr("Edit result"), tr("{field}:", field=localized_field), initialvalue=initial, parent=self.root)
         if value is None:
             return
         value = value.strip()
@@ -1108,10 +1170,10 @@ class ParserWindow:
             try:
                 row[field] = int(value) if value else None
             except ValueError:
-                messagebox.showerror("Invalid value", f"{field.title()} must be a whole number.")
+                messagebox.showerror(tr("Invalid value"), tr("{field} must be a whole number.", field=localized_field))
                 return
         elif not value:
-            messagebox.showerror("Invalid value", "Name cannot be empty.")
+            messagebox.showerror(tr("Invalid value"), tr("Name cannot be empty."))
             return
         else:
             row[field] = value
@@ -1119,7 +1181,7 @@ class ParserWindow:
         self._save_selected_week()
         if self.output_dirs[slot]:
             write_row_exports(self.rows[slot], self.output_dirs[slot])
-        self.status.configure(text=f"Saved edit in {self.selected_week}, {slot}.")
+        self.status.configure(text=tr("Saved edit in {week}, {slot}.", week=self.selected_week, slot=slot_label(slot)))
 
     def _show_name_menu(self, event) -> str | None:
         table = event.widget
@@ -1131,11 +1193,11 @@ class ParserWindow:
         table.selection_set(item)
 
         menu = tk.Menu(self.root, tearoff=False)
-        menu.add_command(label="Edit", command=lambda: self._edit_result_name(slot, row_index))
+        menu.add_command(label=tr("Edit"), command=lambda: self._edit_result_name(slot, row_index))
         row = self.rows[slot][row_index]
         if "not in alliance member list" in str(row.get("issues", "")):
             menu.add_command(
-                label="Add to alliance",
+                label=tr("Add to alliance"),
                 command=lambda: self._add_result_to_alliance(slot, row_index),
             )
             assign_menu = tk.Menu(menu, tearoff=False)
@@ -1148,32 +1210,32 @@ class ParserWindow:
                         command=lambda selected=member: self._assign_result_name(slot, row_index, selected),
                     )
             else:
-                assign_menu.add_command(label="No unassigned members", state="disabled")
-            menu.add_cascade(label="Assign from alliance", menu=assign_menu)
+                assign_menu.add_command(label=tr("No unassigned members"), state="disabled")
+            menu.add_cascade(label=tr("Assign from alliance"), menu=assign_menu)
         menu.tk_popup(event.x_root, event.y_root)
         return "break"
 
     def _edit_result_name(self, slot: str, row_index: int) -> None:
         row = self.rows[slot][row_index]
         value = simpledialog.askstring(
-            "Edit name", "Name:", initialvalue=str(row.get("name", "")), parent=self.root
+            tr("Edit name"), tr("{field}:", field=tr("Name")), initialvalue=str(row.get("name", "")), parent=self.root
         )
         if value is None:
             return
         value = value.strip()
         if not value:
-            messagebox.showerror("Invalid value", "Name cannot be empty.")
+            messagebox.showerror(tr("Invalid value"), tr("Name cannot be empty."))
             return
         displayed_name = edit_result_name(self.rows[slot], row_index, value, load_roster(self.roster_path))
         self._save_and_refresh_slots([slot])
-        self.status.configure(text=f'Saved name "{displayed_name}" for {self.selected_week}, {slot}.')
+        self.status.configure(text=tr('Saved name "{name}" for {week}, {slot}.', name=displayed_name, week=self.selected_week, slot=slot_label(slot)))
 
     def _assign_result_name(self, slot: str, row_index: int, member: str) -> None:
         alias = str(self.rows[slot][row_index].get("name", "")).strip()
         roster = load_roster(self.roster_path)
         aliases = roster.get(member)
         if aliases is None:
-            messagebox.showerror("Member unavailable", f'Alliance member "{member}" no longer exists.')
+            messagebox.showerror(tr("Member unavailable"), tr('Alliance member "{name}" no longer exists.', name=member))
             return
         if alias and alias.casefold() != member.casefold() and all(alias.casefold() != value.casefold() for value in aliases):
             aliases.append(alias)
@@ -1185,7 +1247,7 @@ class ParserWindow:
                 changed_slots.append(candidate_slot)
         self._save_and_refresh_slots(changed_slots)
         self.status.configure(
-            text=f'Assigned "{alias}" to {member} and refreshed {len(changed_slots)} result set(s).'
+            text=tr('Assigned "{alias}" to {member} and refreshed {count} result set(s).', alias=alias, member=member, count=len(changed_slots))
         )
 
     def _add_result_to_alliance(self, slot: str, row_index: int) -> None:
@@ -1202,7 +1264,7 @@ class ParserWindow:
                 changed_slots.append(candidate_slot)
         self._save_and_refresh_slots(changed_slots)
         self.status.configure(
-            text=f'Added "{name}" to the alliance and refreshed {len(changed_slots)} result set(s).'
+            text=tr('Added "{name}" to the alliance and refreshed {count} result set(s).', name=name, count=len(changed_slots))
         )
 
     def _save_and_refresh_slots(self, slots: list[str]) -> None:
@@ -1220,7 +1282,7 @@ class ParserWindow:
             table.column(column, width=max(50, font.measure(heading) + 20, width + 20))
 
     def _choose_video(self, slot: str) -> None:
-        path = filedialog.askopenfilename(title="Choose a recording", filetypes=[("MP4 video", "*.mp4")])
+        path = filedialog.askopenfilename(title=tr("Choose a recording"), filetypes=[(tr("MP4 video"), "*.mp4")])
         if path:
             self._enqueue(slot, Path(path))
 
@@ -1235,9 +1297,9 @@ class ParserWindow:
             if self.current_cancel is not None:
                 self.current_cancel.set()
                 self.drop_areas[slot].show_state(
-                    "Cancelling...", progress=0, browse=False
+                    tr("Cancelling..."), progress=0, browse=False
                 )
-                self.status.configure(text=f"Cancelling {slot}...")
+                self.status.configure(text=tr("Cancelling {slot}...", slot=slot_label(slot)))
             return
         self.slot_versions[slot] += 1
         self.rows[slot] = []
@@ -1245,7 +1307,7 @@ class ParserWindow:
         self.output_dirs[slot] = None
         self._render_slot(slot)
         self._save_selected_week()
-        self.status.configure(text=f"Cleared {slot}.")
+        self.status.configure(text=tr("Cleared {slot}.", slot=slot_label(slot)))
 
     def _on_drop(self, event, slot: str) -> None:
         paths = self.root.tk.splitlist(event.data)
@@ -1254,7 +1316,7 @@ class ParserWindow:
 
     def _enqueue(self, slot: str, video_path: Path) -> None:
         if video_path.suffix.lower() != ".mp4" or not video_path.is_file():
-            messagebox.showerror("Unsupported file", "Please drop an existing .mp4 video.")
+            messagebox.showerror(tr("Unsupported file"), tr("Please drop an existing .mp4 video."))
             return
 
         self.slot_versions[slot] += 1
@@ -1267,8 +1329,8 @@ class ParserWindow:
         table = self.tables[slot]
         for item in table.get_children():
             table.delete(item)
-        self.drop_areas[slot].show_state("Queued...", progress=0, browse=False)
-        self.status.configure(text=f"Queued {video_path.name} for {slot}. {len(self.pending)} waiting.")
+        self.drop_areas[slot].show_state(tr("Queued..."), progress=0, browse=False)
+        self.status.configure(text=tr("Queued {filename} for {slot}. {count} waiting.", filename=video_path.name, slot=slot_label(slot), count=len(self.pending)))
         self._start_next()
 
     def _cancel_queued(self, slot: str) -> None:
@@ -1284,8 +1346,8 @@ class ParserWindow:
         table = self.tables[slot]
         for item in table.get_children():
             table.delete(item)
-        self.drop_areas[slot].show_state("Drop MP4 here", clear=False)
-        self.status.configure(text=f"Cancelled queued video for {slot}. {len(self.pending)} waiting.")
+        self.drop_areas[slot].show_state(tr("Drop MP4 here"), clear=False)
+        self.status.configure(text=tr("Cancelled queued video for {slot}. {count} waiting.", slot=slot_label(slot), count=len(self.pending)))
 
     def _start_next(self) -> None:
         if self.current_job is not None or not self.pending:
@@ -1295,8 +1357,8 @@ class ParserWindow:
         self.current_cancel = threading.Event()
         output_dir = ROOT / "output" / "weeks" / self.selected_week / slot.lower().replace(" ", "_")
         self.output_dirs[slot] = output_dir
-        self.status.configure(text=f"Opening {video_path.name} for {slot}...")
-        self.drop_areas[slot].show_state("Processing...", progress=0, browse=False)
+        self.status.configure(text=tr("Opening {filename} for {slot}...", filename=video_path.name, slot=slot_label(slot)))
+        self.drop_areas[slot].show_state(tr("Processing..."), progress=0, browse=False)
 
         threading.Thread(target=self._process, args=(slot, video_path, output_dir, version), daemon=True).start()
 
@@ -1331,11 +1393,11 @@ class ParserWindow:
                         and self.current_job[2] == version
                     ):
                         self.drop_areas[slot].show_state(
-                            message.replace("OCR", "Processing", 1),
+                            message,
                             progress=(current / max(total, 1)) * 100,
                             browse=False,
                         )
-                        self.status.configure(text=f"{slot}: {message}")
+                        self.status.configure(text=tr("{slot}: {message}", slot=slot_label(slot), message=message))
                 elif event[0] == "complete":
                     self._show_results(*event[1:])
                 elif event[0] == "error":
@@ -1356,16 +1418,16 @@ class ParserWindow:
         self.source_names[slot] = filename
         self._render_slot(slot)
         self._save_selected_week()
-        self.status.configure(text=f"{slot} complete: {len(self.rows[slot])} result(s) from {filename}.")
+        self.status.configure(text=tr("{slot} complete: {count} result(s) from {filename}.", slot=slot_label(slot), count=len(self.rows[slot]), filename=filename))
         self._start_next()
 
     def _show_error(self, slot: str, version: int, filename: str, error: str) -> None:
         self.current_job = None
         self.current_cancel = None
         if version == self.slot_versions[slot]:
-            self.status.configure(text=f"{slot} processing failed")
-            self.drop_areas[slot].show_state("Failed - hover for file", filename)
-            messagebox.showerror(f"Could not process {slot}", error)
+            self.status.configure(text=tr("{slot} processing failed", slot=slot_label(slot)))
+            self.drop_areas[slot].show_state(tr("Failed - hover for file"), filename)
+            messagebox.showerror(tr("Could not process {slot}", slot=slot_label(slot)), error)
         self._start_next()
 
     def _show_cancelled(self, slot: str, version: int) -> None:
@@ -1376,7 +1438,7 @@ class ParserWindow:
             self.source_names[slot] = ""
             self.output_dirs[slot] = None
             self._render_slot(slot)
-            self.status.configure(text=f"Cancelled {slot}.")
+            self.status.configure(text=tr("Cancelled {slot}.", slot=slot_label(slot)))
         self._start_next()
 
     def _active_slot(self) -> str:
@@ -1395,11 +1457,11 @@ class ParserWindow:
         slot = self._active_slot()
         table = self.tables[slot]
         self._copy_text(self._table_text(table))
-        self.status.configure(text=f"Copied the {slot} table to the clipboard.")
+        self.status.configure(text=tr("Copied the {slot} table to the clipboard.", slot=slot_label(slot)))
 
     def _copy_all_week_tables(self) -> None:
         self._copy_text(self._week_tables_text(self.tables))
-        self.status.configure(text=f"Copied all {len(SLOTS)} tables for {self.selected_week} to the clipboard.")
+        self.status.configure(text=tr("Copied all {count} tables for {week} to the clipboard.", count=len(SLOTS), week=self.selected_week))
 
     @staticmethod
     def _table_text(table: ttk.Treeview, items=None) -> str:
@@ -1425,7 +1487,7 @@ class ParserWindow:
         def join_day_blocks(blocks) -> str:
             return "\t\t".join("\t".join(block) for block in blocks)
 
-        lines = [join_day_blocks((slot, "", "") for slot in SLOTS)]
+        lines = [join_day_blocks((slot_label(slot), "", "") for slot in SLOTS)]
         lines.append(join_day_blocks(COPY_HEADINGS for _slot in SLOTS))
         for index in range(max((len(rows) for rows in table_rows), default=0)):
             lines.append(
@@ -1443,13 +1505,13 @@ class ParserWindow:
     def _copy_items(self, items) -> None:
         table = self._active_table()
         self._copy_text(self._table_text(table, items))
-        self.status.configure(text=f"Copied {len(items)} row(s) to the clipboard.")
+        self.status.configure(text=tr("Copied {count} row(s) to the clipboard.", count=len(items)))
 
     def _edit_members(self) -> None:
         MemberEditor(
             self.root,
             self.roster_path,
-            lambda count: self.status.configure(text=f"Saved {count} alliance member(s)."),
+            lambda count: self.status.configure(text=tr("Saved {count} alliance member(s).", count=count)),
         )
 
     def run(self) -> None:

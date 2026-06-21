@@ -9,6 +9,7 @@ import cv2
 
 from .export import write_exports
 from .layout import detect_list_bounds
+from .localization import tr
 from .merge import merge_observations
 from .models import MemberResult
 from .ocr import get_ocr_engine
@@ -41,7 +42,7 @@ def process_video(
     observations = []
     for number, frame in enumerate(frames, start=1):
         if progress:
-            progress(number, len(frames), f"OCR at {frame.timestamp_seconds:.2f}s")
+            progress(number, len(frames), tr("OCR at {seconds:.2f}s", seconds=frame.timestamp_seconds))
         filename = f"frame_{frame.index:06d}_{frame.timestamp_seconds:08.3f}s.jpg"
         frame_path = frame_dir / filename
         cv2.imwrite(str(frame_path), frame.image)
